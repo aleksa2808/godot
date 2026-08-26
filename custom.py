@@ -16,3 +16,5 @@ accesskit = "no"
 angle = "no"
 
 generate_bundle = "yes"
+
+compiledb = "yes"
