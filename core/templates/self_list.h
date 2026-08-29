@@ -35,7 +35,7 @@
 #include "core/typedefs.h"
 
 template <typename T>
-class _WARN_UNUSED_ SelfList {
+class SelfList {
 public:
 	class List {
 		SelfList<T> *_first = nullptr;

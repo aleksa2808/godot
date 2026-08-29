@@ -350,6 +350,11 @@ public:
 		Node *next = nullptr;
 		List<AnnotationNode *> annotations;
 
+		DataType datatype;
+
+		virtual DataType get_datatype() const { return datatype; }
+		virtual void set_datatype(const DataType &p_datatype) { datatype = p_datatype; }
+
 		virtual bool is_expression() const { return false; }
 
 		virtual ~Node() {}
@@ -360,8 +365,6 @@ public:
 		bool reduced = false;
 		bool is_constant = false;
 		Variant reduced_value;
-
-		DataType type_constraint;
 
 		virtual bool is_expression() const override { return true; }
 		virtual ~ExpressionNode() {}
@@ -413,8 +416,6 @@ public:
 		bool infer_datatype = false;
 		bool use_conversion_assign = false;
 		int usages = 0;
-
-		DataType type_constraint;
 
 		virtual ~AssignableNode() {}
 
@@ -534,8 +535,6 @@ public:
 	};
 
 	struct EnumNode : public Node {
-		DataType enum_type;
-
 		struct Value {
 			IdentifierNode *identifier = nullptr;
 			ExpressionNode *custom_value = nullptr;
@@ -667,19 +666,19 @@ public:
 			DataType get_datatype() const {
 				switch (type) {
 					case CLASS:
-						return m_class->self_type;
+						return m_class->get_datatype();
 					case CONSTANT:
-						return constant->type_constraint;
+						return constant->get_datatype();
 					case FUNCTION:
-						return function->return_type_constraint;
+						return function->get_datatype();
 					case VARIABLE:
-						return variable->type_constraint;
+						return variable->get_datatype();
 					case ENUM:
-						return m_enum->enum_type;
+						return m_enum->get_datatype();
 					case ENUM_VALUE:
-						return enum_value.identifier->type_constraint;
+						return enum_value.identifier->get_datatype();
 					case SIGNAL:
-						return signal->signal_type;
+						return signal->get_datatype();
 					case GROUP:
 						return DataType();
 					case UNDEFINED:
@@ -762,16 +761,7 @@ public:
 		String extends_path;
 		Vector<IdentifierNode *> extends; // List for indexing: extends A.B.C
 		DataType base_type;
-		// Metatype that represents this class.
-		DataType self_type;
 		String fqcn; // Fully-qualified class name. Identifies uniquely any class in the project.
-
-		// Range for a class's "extends <CLASS_NAME>" line.
-		// Used as range for some warnings/errors.
-		int extends_start_line = -1;
-		int extends_start_column = -1;
-		int extends_end_line = -1;
-		int extends_end_column = -1;
 #ifdef TOOLS_ENABLED
 		ClassDocData doc_data;
 
@@ -870,10 +860,7 @@ public:
 		Vector<ParameterNode *> parameters;
 		HashMap<StringName, int> parameters_indices;
 		ParameterNode *rest_parameter = nullptr;
-
 		TypeNode *return_type = nullptr;
-		DataType return_type_constraint;
-
 		SuiteNode *body = nullptr;
 		bool is_abstract = false;
 		bool is_static = false; // For lambdas it's determined in the analyzer.
@@ -882,9 +869,6 @@ public:
 		MethodInfo info;
 		LambdaNode *source_lambda = nullptr;
 		Vector<Variant> default_arg_values;
-
-		int header_end_line = 0;
-		int header_end_column = 0;
 #ifdef TOOLS_ENABLED
 		MemberDocData doc_data;
 		int min_local_doc_line = 0;
@@ -1019,8 +1003,6 @@ public:
 	};
 
 	struct PatternNode : public Node {
-		DataType type_constraint;
-
 		enum Type {
 			PT_LITERAL,
 			PT_EXPRESSION,
@@ -1066,8 +1048,6 @@ public:
 	};
 
 	struct ReturnNode : public Node {
-		DataType return_type;
-
 		ExpressionNode *return_value = nullptr;
 		bool void_return = false;
 		bool use_conversion = false;
@@ -1094,8 +1074,6 @@ public:
 		MemberDocData doc_data;
 #endif // TOOLS_ENABLED
 
-		DataType signal_type;
-
 		int usages = 0;
 
 		SignalNode() {
@@ -1118,8 +1096,6 @@ public:
 	};
 
 	struct SuiteNode : public Node {
-		DataType suite_type;
-
 		SuiteNode *parent_block = nullptr;
 		Vector<Node *> statements;
 		struct Local {
@@ -1238,8 +1214,6 @@ public:
 	struct TypeNode : public Node {
 		Vector<IdentifierNode *> type_chain;
 		Vector<TypeNode *> container_types;
-
-		DataType resolved_type;
 
 		TypeNode *get_container_type_or_null(int p_index) const {
 			return p_index >= 0 && p_index < container_types.size() ? container_types[p_index] : nullptr;
@@ -1400,10 +1374,7 @@ public:
 
 private:
 	struct PendingWarning {
-		int start_line = 0;
-		int start_column = 0;
-		int end_line = 0;
-		int end_column = 0;
+		const Node *source = nullptr;
 		GDScriptWarning::Code code = GDScriptWarning::WARNING_MAX;
 		bool treated_as_error = false;
 		Vector<String> symbols;
@@ -1532,7 +1503,6 @@ private:
 	void clear();
 
 	void push_error(const String &p_message, const Node *p_origin = nullptr);
-	void push_error(const String &p_message, int p_start_line, int p_start_column, int p_end_line, int p_end_column);
 	void push_error(const String &p_message, const GDScriptTokenizer::Token &p_origin);
 
 #ifdef DEBUG_ENABLED
@@ -1540,11 +1510,6 @@ private:
 	template <typename... Symbols>
 	void push_warning(const Node *p_source, GDScriptWarning::Code p_code, const Symbols &...p_symbols) {
 		push_warning(p_source, p_code, Vector<String>{ p_symbols... });
-	}
-	void push_warning(int p_start_line, int p_start_column, int p_end_line, int p_end_column, GDScriptWarning::Code p_code, const Vector<String> &p_symbols);
-	template <typename... Symbols>
-	void push_warning(int p_start_line, int p_start_column, int p_end_line, int p_end_column, GDScriptWarning::Code p_code, const Symbols &...p_symbols) {
-		push_warning(p_start_line, p_start_column, p_end_line, p_end_column, p_code, Vector<String>{ p_symbols... });
 	}
 	void apply_pending_warnings();
 	void evaluate_warning_directory_rules_for_script_path();

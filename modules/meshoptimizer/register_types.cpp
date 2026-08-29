@@ -47,7 +47,6 @@ void initialize_meshoptimizer_module(ModuleInitializationLevel p_level) {
 	SurfaceTool::generate_remap_func = meshopt_generateVertexRemap;
 	SurfaceTool::remap_vertex_func = meshopt_remapVertexBuffer;
 	SurfaceTool::remap_index_func = meshopt_remapIndexBuffer;
-	SurfaceTool::generate_tangents_func = meshopt_generateTangents;
 }
 
 void uninitialize_meshoptimizer_module(ModuleInitializationLevel p_level) {
@@ -62,5 +61,4 @@ void uninitialize_meshoptimizer_module(ModuleInitializationLevel p_level) {
 	SurfaceTool::generate_remap_func = nullptr;
 	SurfaceTool::remap_vertex_func = nullptr;
 	SurfaceTool::remap_index_func = nullptr;
-	SurfaceTool::generate_tangents_func = nullptr;
 }

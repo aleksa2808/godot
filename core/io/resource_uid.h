@@ -47,6 +47,7 @@ public:
 	static String get_cache_file();
 
 private:
+	void *crypto = nullptr; // CryptoCore::RandomGenerator (avoid including crypto_core.h)
 	Mutex mutex;
 	struct Cache {
 		CharString cs;
@@ -96,4 +97,5 @@ public:
 	static ResourceUID *get_singleton() { return singleton; }
 
 	ResourceUID();
+	~ResourceUID();
 };

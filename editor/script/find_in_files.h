@@ -186,6 +186,7 @@ class FindInFilesPanel : public MarginContainer {
 	LineEdit *replace_line_edit = nullptr;
 	Button *replace_all_button = nullptr;
 
+	bool floating = false;
 	MarginContainer *results_mc = nullptr;
 
 	void _on_button_clicked(TreeItem *p_item, int p_column, int p_id, int p_mouse_button_index);
@@ -224,7 +225,7 @@ public:
 	void start_search();
 	void stop_search();
 
-	void update_layout(EditorDock::DockLayout p_layout, int p_slot);
+	void update_layout(EditorDock::DockLayout p_layout);
 
 	FindInFilesPanel();
 };
@@ -269,7 +270,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	virtual void update_layout(EditorDock::DockLayout p_layout, int p_slot) override;
+	virtual void update_layout(EditorDock::DockLayout p_layout) override;
 
 	FindInFilesPanel *get_panel_for_results(const String &p_label);
 

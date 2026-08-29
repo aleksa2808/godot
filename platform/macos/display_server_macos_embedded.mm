@@ -716,8 +716,13 @@ void DisplayServerMacOSEmbedded::window_get_edr_values(DisplayServerEnums::Windo
 		*v = val; \
 	}
 
-	SET_VAL(r_max_potential_edr_value, state.screen_max_edr);
-	SET_VAL(r_max_edr_value, state.screen_max_potential_edr);
+	if (@available(macOS 10.15, *)) {
+		SET_VAL(r_max_potential_edr_value, state.screen_max_edr);
+		SET_VAL(r_max_edr_value, state.screen_max_potential_edr);
+	} else {
+		SET_VAL(r_max_potential_edr_value, 1.0);
+		SET_VAL(r_max_edr_value, 1.0);
+	}
 
 #undef SET_VAL
 }

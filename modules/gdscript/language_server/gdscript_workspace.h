@@ -72,6 +72,9 @@ protected:
 	void apply_new_signal(Object *obj, String function, PackedStringArray args);
 
 public:
+	String root;
+	String root_uri;
+
 	HashMap<StringName, ClassMembers> native_members;
 
 public:

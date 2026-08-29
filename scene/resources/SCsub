@@ -9,6 +9,7 @@ thirdparty_obj = []
 
 thirdparty_dir = "#thirdparty/misc/"
 thirdparty_sources = [
+    "mikktspace.c",
     "qoa.c",
 ]
 

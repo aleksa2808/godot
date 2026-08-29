@@ -69,12 +69,14 @@ Vector<String> load_test_data() {
 
 TEST_CASE("[FuzzySearch] Test fuzzy search results") {
 	FuzzySearch search;
+	Vector<FuzzySearchResult> results;
 	Vector<String> targets = load_test_data();
 
 	for (FuzzySearchTestCase test_case : test_cases) {
-		Vector<Ref<FuzzySearchMatch>> results = search.search_all(test_case.query, targets);
+		search.set_query(test_case.query);
+		search.search_all(targets, results);
 		CHECK_GT(results.size(), 0);
-		CHECK_EQ(results[0]->get_target(), test_case.expected);
+		CHECK_EQ(results[0].target, test_case.expected);
 	}
 }
 

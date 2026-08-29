@@ -38,7 +38,6 @@
 #include "gdscript_utility_functions.h"
 
 #ifdef TOOLS_ENABLED
-#include "editor/gdscript_editor_language.h"
 #include "editor/gdscript_highlighter.h"
 #include "editor/gdscript_translation_parser_plugin.h"
 #include "editor/script/script_editor_plugin.h"
@@ -81,8 +80,8 @@ GDScriptCache *gdscript_cache = nullptr;
 
 Ref<GDScriptEditorTranslationParserPlugin> gdscript_translation_parser_plugin;
 
-class GDScriptExportPlugin : public EditorExportPlugin {
-	GDSOFTCLASS(GDScriptExportPlugin, EditorExportPlugin);
+class EditorExportGDScript : public EditorExportPlugin {
+	GDCLASS(EditorExportGDScript, EditorExportPlugin);
 
 	static constexpr EditorExportPreset::ScriptExportMode DEFAULT_SCRIPT_MODE = EditorExportPreset::MODE_SCRIPT_BINARY_TOKENS_COMPRESSED;
 	EditorExportPreset::ScriptExportMode script_mode = DEFAULT_SCRIPT_MODE;
@@ -122,7 +121,7 @@ public:
 };
 
 static void _editor_init() {
-	Ref<GDScriptExportPlugin> gd_export;
+	Ref<EditorExportGDScript> gd_export;
 	gd_export.instantiate();
 	EditorExport::get_singleton()->add_export_plugin(gd_export);
 
@@ -161,8 +160,6 @@ void initialize_gdscript_module(ModuleInitializationLevel p_level) {
 		gdscript_translation_parser_plugin.instantiate();
 		EditorTranslationParser::get_singleton()->add_parser(gdscript_translation_parser_plugin, EditorTranslationParser::STANDARD);
 	} else if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
-		memnew(GDScriptEditorLanguage);
-
 		GDREGISTER_CLASS(GDScriptSyntaxHighlighter);
 #ifndef GDSCRIPT_NO_LSP
 		register_lsp_types();
@@ -206,7 +203,6 @@ void uninitialize_gdscript_module(ModuleInitializationLevel p_level) {
 #ifndef GDSCRIPT_NO_LSP
 		memdelete(GDScriptLanguageProtocol::get_singleton());
 #endif // GDSCRIPT_NO_LSP
-		memdelete(GDScriptEditorLanguage::get_singleton());
 	}
 #endif // TOOLS_ENABLED
 }

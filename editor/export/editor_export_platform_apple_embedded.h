@@ -143,9 +143,6 @@ protected:
 		String modules_fileref;
 		String modules_buildphase;
 		String modules_buildgrp;
-		String spm_packages;
-		String spm_package_refs;
-		String spm_package_products;
 		Vector<String> capabilities;
 	};
 
@@ -208,8 +205,6 @@ private:
 
 protected:
 	virtual String _process_config_file_line(const Ref<EditorExportPreset> &p_preset, const String &p_line, const AppleEmbeddedConfigData &p_config, bool p_debug, const CodeSigningDetails &p_code_signing);
-
-	String launch_screen_image_file_name;
 
 	void _blend_and_rotate(Ref<Image> &p_dst, Ref<Image> &p_src, bool p_rot);
 

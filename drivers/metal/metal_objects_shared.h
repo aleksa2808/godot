@@ -396,7 +396,6 @@ struct MDSubpass {
 	LocalVector<RDD::AttachmentReference> color_references;
 	RDD::AttachmentReference depth_stencil_reference;
 	LocalVector<RDD::AttachmentReference> resolve_references;
-	RDD::AttachmentReference depth_resolve_reference;
 
 	MTLFmtCaps getRequiredFmtCapsForAttachmentAt(uint32_t p_index) const;
 };
@@ -890,7 +889,7 @@ struct ShaderCacheEntry {
 	std::weak_ptr<MDLibrary> library;
 
 	/// Notify the cache that this entry is no longer needed.
-	void notify_free();
+	void notify_free() const;
 
 	ShaderCacheEntry(RenderingDeviceDriverMetal &p_owner, SHA256Digest p_key) :
 			owner(p_owner), key(p_key) {

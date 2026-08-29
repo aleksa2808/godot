@@ -42,6 +42,10 @@ Ref<AudioStreamPlayback> AudioStreamPlaylist::instantiate_playback() {
 	return playback_playlist;
 }
 
+String AudioStreamPlaylist::get_stream_name() const {
+	return "Playlist";
+}
+
 void AudioStreamPlaylist::set_list_stream(int p_stream_index, Ref<AudioStream> p_stream) {
 	ERR_FAIL_COND(p_stream == this);
 	ERR_FAIL_INDEX(p_stream_index, MAX_STREAMS);
@@ -243,7 +247,6 @@ void AudioStreamPlaybackPlaylist::start(double p_from_pos) {
 	playback[play_order[play_index]]->start(play_ofs);
 	fade_index = -1;
 	loop_count = 0;
-	offset = p_from_pos;
 
 	active = true;
 }

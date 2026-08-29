@@ -55,6 +55,7 @@ class AudioStreamPlaybackWAV : public AudioStreamPlaybackResampled {
 		uint64_t data_ofs = 0;
 		uint32_t frame_len = 0;
 		TightLocalVector<int16_t> dec;
+		uint32_t dec_len = 0;
 	} qoa;
 
 	int64_t offset = 0;
@@ -121,6 +122,7 @@ private:
 	int64_t loop_end = 0;
 	uint32_t mix_rate = 44100;
 	TightLocalVector<uint8_t, uint64_t> data;
+	uint32_t data_bytes = 0;
 
 	Dictionary tags;
 
@@ -162,6 +164,7 @@ public:
 	Error save_to_wav(const String &p_path);
 
 	virtual Ref<AudioStreamPlayback> instantiate_playback() override;
+	virtual String get_stream_name() const override;
 
 	virtual bool can_be_sampled() const override {
 		return true;

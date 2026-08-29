@@ -110,13 +110,8 @@ uLong zipio_write(voidpf opaque, voidpf stream, const void *buf, uLong size) {
 	ERR_FAIL_NULL_V(fa, 0);
 	ERR_FAIL_COND_V(fa->is_null(), 0);
 
-	bool fa_success = (*fa)->store_buffer((uint8_t *)buf, size);
-
-	if (fa_success) {
-		return size;
-	}
-
-	return 0;
+	(*fa)->store_buffer((uint8_t *)buf, size);
+	return size;
 }
 
 long zipio_tell(voidpf opaque, voidpf stream) {

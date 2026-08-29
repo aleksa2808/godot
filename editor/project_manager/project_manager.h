@@ -247,7 +247,6 @@ class ProjectManager : public Control {
 	VBoxContainer *ask_update_vb = nullptr;
 	Label *ask_update_label = nullptr;
 	CheckBox *ask_update_backup = nullptr;
-	CheckBox *ask_upgrade_tool = nullptr;
 	Button *full_convert_button = nullptr;
 	Button *migration_guide_button = nullptr;
 

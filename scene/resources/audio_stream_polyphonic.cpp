@@ -44,6 +44,10 @@ Ref<AudioStreamPlayback> AudioStreamPolyphonic::instantiate_playback() {
 	return playback;
 }
 
+String AudioStreamPolyphonic::get_stream_name() const {
+	return "AudioStreamPolyphonic";
+}
+
 bool AudioStreamPolyphonic::is_monophonic() const {
 	return true; // This avoids stream players to instantiate more than one of these.
 }

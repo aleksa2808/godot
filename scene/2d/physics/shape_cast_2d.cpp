@@ -36,7 +36,6 @@
 #include "scene/2d/physics/collision_object_2d.h"
 #include "scene/main/scene_tree.h"
 #include "scene/resources/world_2d.h"
-#include "servers/physics_2d/direct_states/physics_direct_space_state_2d.h"
 #include "servers/physics_2d/physics_server_2d.h"
 
 void ShapeCast2D::set_target_position(const Vector2 &p_point) {
@@ -299,7 +298,7 @@ void ShapeCast2D::_update_shapecast_state() {
 
 	Transform2D gt = get_global_transform();
 
-	PS2DT::ShapeParameters params;
+	PhysicsDirectSpaceState2D::ShapeParameters params;
 	params.shape_rid = shape_rid;
 	params.transform = gt;
 	params.motion = gt.basis_xform(target_position);
@@ -329,7 +328,7 @@ void ShapeCast2D::_update_shapecast_state() {
 
 	bool intersected = true;
 	while (intersected && result.size() < max_results) {
-		PS2DT::ShapeRestInfo info;
+		PhysicsDirectSpaceState2D::ShapeRestInfo info;
 		intersected = dss->rest_info(params, &info);
 		if (intersected) {
 			result.push_back(info);
@@ -389,7 +388,7 @@ Array ShapeCast2D::get_collision_result() const {
 	Array ret;
 
 	for (int i = 0; i < result.size(); ++i) {
-		const PS2DT::ShapeRestInfo &sri = result[i];
+		const PhysicsDirectSpaceState2D::ShapeRestInfo &sri = result[i];
 
 		Dictionary col;
 		col["point"] = sri.point;

@@ -47,10 +47,30 @@
 #endif
 
 #ifdef CRASH_HANDLER_ENABLED
-#include "stack_trace_macos.h"
-
 #include <cxxabi.h>
+#include <dlfcn.h>
 #include <execinfo.h>
+#import <mach-o/dyld.h>
+#import <mach-o/getsect.h>
+
+#include <csignal>
+#include <cstdlib>
+
+static uint64_t load_address() {
+	char full_path[1024];
+	uint32_t size = sizeof(full_path);
+
+	if (!_NSGetExecutablePath(full_path, &size)) {
+		void *handle = dlopen(full_path, RTLD_LAZY | RTLD_NOLOAD);
+		void *addr = dlsym(handle, "main");
+		Dl_info info;
+		if (dladdr(addr, &info)) {
+			return (uint64_t)info.dli_fbase;
+		}
+	}
+
+	return 0;
+}
 
 static void handle_crash(int sig) {
 	signal(SIGSEGV, SIG_DFL);
@@ -68,7 +88,7 @@ static void handle_crash(int sig) {
 
 	void *bt_buffer[256];
 	size_t size = backtrace(bt_buffer, 256);
-	String exec_path = OS::get_singleton()->get_executable_path();
+	String _execpath = OS::get_singleton()->get_executable_path();
 
 	String msg;
 	if (ProjectSettings::get_singleton()) {
@@ -92,12 +112,42 @@ static void handle_crash(int sig) {
 	}
 	print_error(vformat("Dumping the backtrace. %s", msg));
 
-	const void *load_addr = StackTraceMacOS::find_executable_load_address();
+	List<String> args;
+	args.push_back("-o");
+	args.push_back(_execpath);
+
+#if defined(__x86_64) || defined(__x86_64__) || defined(__amd64__)
+	args.push_back("-arch");
+	args.push_back("x86_64");
+#elif defined(__aarch64__)
+	args.push_back("-arch");
+	args.push_back("arm64");
+#endif
+
+	args.push_back("--fullPath");
+	args.push_back("-l");
+
+	char str[1024];
+	void *load_addr = (void *)load_address();
+	snprintf(str, 1024, "%p", load_addr);
+	args.push_back(str);
+
+	for (size_t i = 0; i < size; i++) {
+		snprintf(str, 1024, "%p", bt_buffer[i]);
+		args.push_back(str);
+	}
+
 	print_error(vformat("Load address: %x\n", (uint64_t)load_addr));
 
-	const Vector<String> lines = StackTraceMacOS::symbolize_with_atos(exec_path, load_addr, bt_buffer, size);
+	// Single execution of atos with all addresses.
+	String out;
+	int ret;
+	Error err = OS::get_singleton()->execute(String("atos"), args, &out, &ret);
 
-	if (!lines.is_empty()) {
+	if (err == OK) {
+		// Parse the multi-line output
+		Vector<String> lines = out.split("\n");
+
 		// Get demangled names from dladdr for fallback.
 		char **strings = backtrace_symbols(bt_buffer, size);
 

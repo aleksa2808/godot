@@ -218,7 +218,6 @@ class ControlEditorToolbar : public HBoxContainer {
 	ControlEditorPopupButton *anchors_button = nullptr;
 	ControlEditorPopupButton *containers_button = nullptr;
 	Button *anchor_mode_button = nullptr;
-	CheckBox *reposition_button = nullptr;
 
 	AnchorPresetPicker *anchors_picker = nullptr;
 

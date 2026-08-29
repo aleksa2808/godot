@@ -1630,6 +1630,9 @@ String VisualShader::validate_port_name(const String &p_port_name, VisualShaderN
 		return String();
 	}
 
+	List<String> input_names;
+	List<String> output_names;
+
 	for (int i = 0; i < p_node->get_input_port_count(); i++) {
 		if (!p_output && i == p_port_id) {
 			continue;

@@ -55,7 +55,7 @@ protected:
 
 	StringName name;
 	/// Contains all the class names in order:
-	/// `name` is the first element and `Object` is the last (for `Object` types).
+	/// `name` is the first element and `Object` is the last.
 	Vector<StringName> name_hierarchy;
 
 	AHashMap<StringName, int64_t> constant_map;

@@ -140,7 +140,7 @@ public:
 	void resize(int p_size);
 
 	void set_data_array(const Vector<uint8_t> &p_data);
-	const Vector<uint8_t> &get_data_array() const _LIFETIME_BOUND_;
+	Vector<uint8_t> get_data_array() const;
 
 	void clear();
 

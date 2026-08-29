@@ -63,7 +63,6 @@
 #include "core/variant/dictionary.h"
 #include "core/variant/variant_deep_duplicate.h"
 
-class GDType;
 class Object;
 class RefCounted;
 
@@ -166,10 +165,6 @@ private:
 	// and PackedArray/Array/Dictionary (platform-dependent).
 
 	Type type = NIL;
-
-	static GDType &_get_gdtype_for_type(Variant::Type p_type);
-	static void _register_variant_gdtypes();
-	static void _unregister_variant_gdtypes();
 
 	struct ObjData {
 		ObjectID id;

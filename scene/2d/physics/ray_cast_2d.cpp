@@ -35,7 +35,6 @@
 #include "scene/2d/physics/collision_object_2d.h"
 #include "scene/main/scene_tree.h"
 #include "scene/resources/world_2d.h"
-#include "servers/physics_2d/direct_states/physics_direct_space_state_2d.h"
 
 void RayCast2D::set_target_position(const Vector2 &p_point) {
 	target_position = p_point;
@@ -196,10 +195,10 @@ void RayCast2D::_update_raycast_state() {
 		to = Vector2(0, 0.01);
 	}
 
-	PS2DT::RayResult rr;
+	PhysicsDirectSpaceState2D::RayResult rr;
 	bool prev_collision_state = collided;
 
-	PS2DT::RayParameters ray_params;
+	PhysicsDirectSpaceState2D::RayParameters ray_params;
 	ray_params.from = gt.get_origin();
 	ray_params.to = gt.xform(to);
 	ray_params.exclude = exclude;

@@ -46,10 +46,6 @@ public:
 	};
 
 private:
-	struct ThemeCache {
-		int click_margin = 0;
-	} theme_cache;
-
 	BitField<MouseButtonMask> button_mask = MouseButtonMask::LEFT;
 	bool toggle_mode = false;
 	bool shortcut_in_tooltip = true;
@@ -106,8 +102,6 @@ public:
 	};
 
 	DrawMode get_draw_mode() const;
-
-	virtual bool has_point(const Point2 &p_point) const override;
 
 	/* Signals */
 

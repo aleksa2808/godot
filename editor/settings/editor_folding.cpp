@@ -66,11 +66,6 @@ void EditorFolding::save_resource_folding(const Ref<Resource> &p_resource, const
 	String file = p_path.get_file() + "-folding-" + p_path.md5_text() + ".cfg";
 	file = EditorPaths::get_singleton()->get_project_settings_dir().path_join(file);
 	config->save(file);
-
-	if (as_anim.is_valid()) {
-		// Folding state have been stored into the .cfg, clear the dirty flag.
-		as_anim->editor_set_folding_dirty(false);
-	}
 }
 
 void EditorFolding::_set_unfolds(Object *p_object, const Vector<String> &p_unfolds) {
@@ -107,7 +102,7 @@ void EditorFolding::load_resource_folding(Ref<Resource> p_resource, const String
 	}
 }
 
-void EditorFolding::_fill_folds(const Node *p_root, const Node *p_node, Array &p_folds, Array &resource_folds, Array &nodes_folded, HashSet<Ref<Resource>> &resources, HashSet<Ref<Animation>> &animations, Array &anim_groups_folded, HashSet<Ref<Animation>> &r_external_anims) {
+void EditorFolding::_fill_folds(const Node *p_root, const Node *p_node, Array &p_folds, Array &resource_folds, Array &nodes_folded, HashSet<Ref<Resource>> &resources, HashSet<Ref<Animation>> &animations, Array &anim_groups_folded) {
 	if (p_root != p_node) {
 		if (!p_node->get_owner()) {
 			return; //not owned, bye
@@ -133,17 +128,10 @@ void EditorFolding::_fill_folds(const Node *p_root, const Node *p_node, Array &p
 		anim_mixer->get_animation_list(&anim_names);
 		for (const StringName &anim_name : anim_names) {
 			Ref<Animation> anim = anim_mixer->get_animation(anim_name);
-			if (anim.is_valid() && !animations.has(anim) && !anim->get_path().is_empty()) {
-				if (anim->get_path().is_resource_file()) {
-					// Save .cfg separate from external animation resource.
-					if (anim->editor_is_folding_dirty()) {
-						r_external_anims.insert(anim);
-					}
-				} else {
-					Vector<String> anim_folds = _get_animation_folds(anim.ptr());
-					anim_groups_folded.push_back(anim->get_path());
-					anim_groups_folded.push_back(anim_folds);
-				}
+			if (anim.is_valid() && !animations.has(anim) && !anim->get_path().is_empty() && !anim->get_path().is_resource_file()) {
+				Vector<String> anim_folds = _get_animation_folds(anim.ptr());
+				anim_groups_folded.push_back(anim->get_path());
+				anim_groups_folded.push_back(anim_folds);
 				animations.insert(anim);
 			}
 		}
@@ -166,7 +154,7 @@ void EditorFolding::_fill_folds(const Node *p_root, const Node *p_node, Array &p
 	}
 
 	for (int i = 0; i < p_node->get_child_count(); i++) {
-		_fill_folds(p_root, p_node->get_child(i), p_folds, resource_folds, nodes_folded, resources, animations, anim_groups_folded, r_external_anims);
+		_fill_folds(p_root, p_node->get_child(i), p_folds, resource_folds, nodes_folded, resources, animations, anim_groups_folded);
 	}
 }
 
@@ -186,8 +174,7 @@ void EditorFolding::save_scene_folding(const Node *p_scene, const String &p_path
 	Array nodes_folded;
 	HashSet<Ref<Animation>> animations;
 	Array anim_groups_folded;
-	HashSet<Ref<Animation>> external_anims;
-	_fill_folds(p_scene, p_scene, unfolds, res_unfolds, nodes_folded, resources, animations, anim_groups_folded, external_anims);
+	_fill_folds(p_scene, p_scene, unfolds, res_unfolds, nodes_folded, resources, animations, anim_groups_folded);
 
 	config->set_value("folding", "node_unfolds", unfolds);
 	config->set_value("folding", "resource_unfolds", res_unfolds);
@@ -197,11 +184,6 @@ void EditorFolding::save_scene_folding(const Node *p_scene, const String &p_path
 	String file = p_path.get_file() + "-folding-" + p_path.md5_text() + ".cfg";
 	file = EditorPaths::get_singleton()->get_project_settings_dir().path_join(file);
 	config->save(file);
-
-	// Special case for persist folding for external (resource-file) animations referenced by the scene.
-	for (const Ref<Animation> &anim : external_anims) {
-		save_resource_folding(anim, anim->get_path());
-	}
 }
 
 void EditorFolding::load_scene_folding(Node *p_scene, const String &p_path) {

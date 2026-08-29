@@ -491,9 +491,7 @@ void EditorVisualProfiler::_graph_tex_draw() {
 
 	if (seeking) {
 		int max_frames = frame_metrics.size();
-
-		int64_t first_visible_frame = static_cast<int64_t>(frame_metrics[last_metric].frame_number) - max_frames + 1;
-		int frame = (cursor_metric_edit->get_value() - first_visible_frame);
+		int frame = cursor_metric_edit->get_value() - (frame_metrics[last_metric].frame_number - max_frames + 1);
 		if (frame < 0) {
 			frame = 0;
 		}

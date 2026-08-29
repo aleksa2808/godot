@@ -526,6 +526,7 @@ class WaylandEmbedder {
 
 	Thread proxy_thread;
 
+	List<int> client_fds;
 	List<int> compositor_fds;
 
 	uint32_t serial_counter = 0;

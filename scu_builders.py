@@ -423,7 +423,6 @@ def generate_scu_files(max_includes_per_scu):
             "tests",
             "/core",
             "/core/config",
-            "/core/crypto",
             "/core/input",
             "/core/io",
             "/core/math",

@@ -46,7 +46,7 @@
 template <typename TKey,
 		typename Hasher = HashMapHasherDefault,
 		typename Comparator = HashMapComparatorDefault<TKey>>
-class _WARN_UNUSED_ HashSet {
+class HashSet {
 public:
 	static constexpr uint32_t MIN_CAPACITY_INDEX = 2; // Use a prime.
 	static constexpr float MAX_OCCUPANCY = 0.75;
@@ -380,20 +380,20 @@ public:
 		int32_t _key_idx = -1;
 	};
 
-	_FORCE_INLINE_ Iterator begin() const _LIFETIME_BOUND_ {
+	_FORCE_INLINE_ Iterator begin() const {
 		return _size ? Iterator(_keys, _size, 0) : Iterator();
 	}
-	_FORCE_INLINE_ Iterator end() const _LIFETIME_BOUND_ {
+	_FORCE_INLINE_ Iterator end() const {
 		return Iterator();
 	}
-	_FORCE_INLINE_ Iterator last() const _LIFETIME_BOUND_ {
+	_FORCE_INLINE_ Iterator last() const {
 		if (_size == 0) {
 			return Iterator();
 		}
 		return Iterator(_keys, _size, _size - 1);
 	}
 
-	_FORCE_INLINE_ Iterator find(const TKey &p_key) const _LIFETIME_BOUND_ {
+	_FORCE_INLINE_ Iterator find(const TKey &p_key) const {
 		uint32_t key_idx = 0;
 		bool exists = _lookup_key_idx(p_key, key_idx);
 		if (!exists) {
@@ -410,7 +410,7 @@ public:
 
 	/* Insert */
 
-	Iterator insert(const TKey &p_key) _LIFETIME_BOUND_ {
+	Iterator insert(const TKey &p_key) {
 		uint32_t key_idx = _insert(p_key);
 		return Iterator(_keys, _size, key_idx);
 	}
