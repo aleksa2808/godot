@@ -47,6 +47,7 @@
 #include "core/os/os.h"
 #include "core/version.h"
 #include "editor/debugger/editor_debugger_node.h"
+#include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
 #include "editor/export/lipo.h"
 #include "editor/file_system/editor_paths.h"
@@ -151,9 +152,9 @@ bool godot_icall_Internal_IsAssembliesReloadingNeeded() {
 #endif
 }
 
-void godot_icall_Internal_ReloadAssemblies() {
+void godot_icall_Internal_ReloadAssemblies(bool p_soft_reload) {
 #ifdef GD_MONO_HOT_RELOAD
-	callable_mp(MonoBind::GodotSharp::get_singleton(), &MonoBind::GodotSharp::reload_assemblies).call_deferred();
+	callable_mp(MonoBind::GodotSharp::get_singleton(), &MonoBind::GodotSharp::reload_assemblies).call_deferred(p_soft_reload);
 #endif
 }
 
@@ -167,7 +168,7 @@ bool godot_icall_Internal_ScriptEditorEdit(Resource *p_resource, int32_t p_line,
 }
 
 void godot_icall_Internal_EditorNodeShowScriptScreen() {
-	ScriptEditor::get_singleton()->focus_editor();
+	EditorNode::get_editor_main_screen()->select(EditorMainScreen::EDITOR_SCRIPT);
 }
 
 void godot_icall_Internal_EditorRunPlay() {

@@ -139,7 +139,10 @@ Error CompressedTexture2D::load(const String &p_path) {
 	bool request_roughness;
 	int mipmap_limit;
 
-	RETURN_IF_ERROR(_load_data(p_path, lw, lh, image, request_3d, request_normal, request_roughness, mipmap_limit));
+	Error err = _load_data(p_path, lw, lh, image, request_3d, request_normal, request_roughness, mipmap_limit);
+	if (err) {
+		return err;
+	}
 
 	if (texture.is_valid()) {
 		RID new_texture = RS::get_singleton()->texture_2d_create(image);
@@ -524,7 +527,10 @@ Error CompressedTexture3D::load(const String &p_path) {
 	Image::Format tfmt;
 	bool tmm;
 
-	RETURN_IF_ERROR(_load_data(p_path, data, tfmt, tw, th, td, tmm));
+	Error err = _load_data(p_path, data, tfmt, tw, th, td, tmm);
+	if (err) {
+		return err;
+	}
 
 	if (texture.is_valid()) {
 		RID new_texture = RS::get_singleton()->texture_3d_create(tfmt, tw, th, td, tmm, data);
@@ -676,7 +682,10 @@ Error CompressedTextureLayered::load(const String &p_path) {
 
 	int mipmap_limit;
 
-	RETURN_IF_ERROR(_load_data(p_path, images, mipmap_limit));
+	Error err = _load_data(p_path, images, mipmap_limit);
+	if (err) {
+		return err;
+	}
 
 	if (texture.is_valid()) {
 		RID new_texture = RS::get_singleton()->texture_2d_layered_create(images, RSE::TextureLayeredType(layered_type));

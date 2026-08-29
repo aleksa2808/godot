@@ -565,7 +565,8 @@ void GodotBody2D::integrate_forces(real_t p_step) {
 		real_t rot = new_transform.get_rotation() - get_transform().get_rotation();
 		angular_velocity = constant_angular_velocity + std::remainder(rot, 2.0 * Math::PI) / p_step;
 
-		do_motion = continuous_cd_mode != PS2DE::CCD_MODE_DISABLED;
+		do_motion = true;
+
 	} else {
 		if (!omit_force_integration) {
 			//overridden by direct state query
@@ -623,7 +624,7 @@ void GodotBody2D::integrate_velocities(real_t p_step) {
 	}
 
 	if (mode == PS2DE::BODY_MODE_KINEMATIC) {
-		_set_transform(new_transform, continuous_cd_mode == PS2DE::CCD_MODE_DISABLED);
+		_set_transform(new_transform, false);
 		_set_inv_transform(new_transform.affine_inverse());
 		if (contacts.is_empty() && linear_velocity == Vector2() && angular_velocity == 0) {
 			set_active(false); //stopped moving, deactivate
@@ -753,6 +754,10 @@ GodotBody2D::GodotBody2D() :
 }
 
 GodotBody2D::~GodotBody2D() {
-	memdelete(fi_callback_data);
-	memdelete(direct_state);
+	if (fi_callback_data) {
+		memdelete(fi_callback_data);
+	}
+	if (direct_state) {
+		memdelete(direct_state);
+	}
 }

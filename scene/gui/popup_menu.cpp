@@ -522,93 +522,129 @@ void PopupMenu::_input_from_window_internal(const Ref<InputEvent> &p_event) {
 		if (is_joypad_event && !has_focus_or_active_popup()) {
 			return;
 		}
-
-		if (p_event->is_pressed()) {
-			if (search_bar_enabled && (p_event->is_action("ui_focus_next", true) || p_event->is_action("ui_focus_prev", true))) {
-				if (mouse_over == -1 && search_bar->has_focus()) {
-					_highlight_first_available_item();
+		if (p_event->is_action("ui_down", true) && p_event->is_pressed()) {
+			if (is_joypad_event) {
+				if (!input->is_action_just_pressed_by_event("ui_down", p_event, true)) {
+					return;
 				}
-				return;
+				joypad_event_process = true;
+				set_process_internal(true);
+			}
+			int search_from = mouse_over + 1;
+			if (search_from >= items.size()) {
+				search_from = 0;
 			}
 
-			if (p_event->is_action("ui_down", true)) {
-				if (is_joypad_event) {
-					if (!input->is_action_just_pressed_by_event("ui_down", p_event, true)) {
-						return;
-					}
-					joypad_event_process = true;
-					set_process_internal(true);
-				}
-				int search_from = mouse_over + 1;
-				if (search_from >= items.size()) {
-					search_from = 0;
-				}
-
-				bool match_found = _highlight_first_available_item(search_from);
-				if (!match_found) {
-					// If the last item is not selectable, try re-searching from the start.
-					match_found = _highlight_first_available_item(0, search_from);
-				}
-				if (match_found) {
+			bool match_found = false;
+			for (int i = search_from; i < items.size(); i++) {
+				if (!items[i].separator && !items[i].disabled && items[i].visible) {
+					prev_mouse_over = mouse_over;
+					mouse_over = i;
 					control->grab_focus();
+					emit_signal(SNAME("id_focused"), items[i].id);
+					scroll_to_item(i);
+					queue_accessibility_update();
+					control->queue_redraw();
 					set_input_as_handled();
+					match_found = true;
+					break;
 				}
-			} else if (p_event->is_action("ui_up", true)) {
-				if (is_joypad_event) {
-					if (!input->is_action_just_pressed_by_event("ui_up", p_event, true)) {
-						return;
-					}
-					joypad_event_process = true;
-					set_process_internal(true);
-				}
-				int search_from = mouse_over - 1;
-				if (search_from < 0) {
-					search_from = items.size() - 1;
-				}
+			}
 
-				bool match_found = _highlight_first_available_item(search_from, 0, true);
-				if (!match_found) {
-					// If the first item is not selectable, try re-searching from the end.
-					_highlight_first_available_item(items.size() - 1, search_from, true);
+			if (!match_found) {
+				// If the last item is not selectable, try re-searching from the start.
+				for (int i = 0; i < search_from; i++) {
+					if (!items[i].separator && !items[i].disabled && items[i].visible) {
+						prev_mouse_over = mouse_over;
+						mouse_over = i;
+						control->grab_focus();
+						emit_signal(SNAME("id_focused"), items[i].id);
+						scroll_to_item(i);
+						queue_accessibility_update();
+						control->queue_redraw();
+						set_input_as_handled();
+						break;
+					}
 				}
-				if (match_found) {
+			}
+		} else if (p_event->is_action("ui_up", true) && p_event->is_pressed()) {
+			if (is_joypad_event) {
+				if (!input->is_action_just_pressed_by_event("ui_up", p_event, true)) {
+					return;
+				}
+				joypad_event_process = true;
+				set_process_internal(true);
+			}
+			int search_from = mouse_over - 1;
+			if (search_from < 0) {
+				search_from = items.size() - 1;
+			}
+
+			bool match_found = false;
+			for (int i = search_from; i >= 0; i--) {
+				if (!items[i].separator && !items[i].disabled && items[i].visible) {
+					prev_mouse_over = mouse_over;
+					mouse_over = i;
 					control->grab_focus();
+					emit_signal(SNAME("id_focused"), items[i].id);
+					scroll_to_item(i);
+					queue_accessibility_update();
+					control->queue_redraw();
 					set_input_as_handled();
+					match_found = true;
+					break;
 				}
-			} else if (p_event->is_action("ui_left", true)) {
+			}
+
+			if (!match_found) {
+				// If the first item is not selectable, try re-searching from the end.
+				for (int i = items.size() - 1; i >= search_from; i--) {
+					if (!items[i].separator && !items[i].disabled && items[i].visible) {
+						prev_mouse_over = mouse_over;
+						mouse_over = i;
+						control->grab_focus();
+						emit_signal(SNAME("id_focused"), items[i].id);
+						scroll_to_item(i);
+						queue_accessibility_update();
+						control->queue_redraw();
+						set_input_as_handled();
+						break;
+					}
+				}
+			}
+		} else if (p_event->is_action("ui_left", true) && p_event->is_pressed()) {
+			Node *n = get_parent();
+			if (n) {
+				if (PopupMenu *parent_popup = Object::cast_to<PopupMenu>(n)) {
+					parent_popup->activated_by_keyboard = true;
+					hide();
+					set_input_as_handled();
+				} else if (Object::cast_to<MenuBar>(n)) {
+					Object::cast_to<MenuBar>(n)->gui_input(p_event);
+					set_input_as_handled();
+					return;
+				}
+			}
+		} else if (p_event->is_action("ui_right", true) && p_event->is_pressed()) {
+			if (mouse_over >= 0 && mouse_over < items.size() && !items[mouse_over].separator && items[mouse_over].submenu && submenu_over != mouse_over) {
+				_activate_submenu(mouse_over, true);
+				set_input_as_handled();
+			} else {
 				Node *n = get_parent();
-				if (n) {
-					if (PopupMenu *parent_popup = Object::cast_to<PopupMenu>(n)) {
-						parent_popup->activated_by_keyboard = true;
-						hide();
-						set_input_as_handled();
-					} else if (Object::cast_to<MenuBar>(n)) {
-						Object::cast_to<MenuBar>(n)->gui_input(p_event);
-						set_input_as_handled();
-						return;
-					}
+				if (n && Object::cast_to<MenuBar>(n)) {
+					Object::cast_to<MenuBar>(n)->gui_input(p_event);
+					set_input_as_handled();
+					return;
 				}
-			} else if (p_event->is_action("ui_right", true)) {
-				if (mouse_over >= 0 && mouse_over < items.size() && !items[mouse_over].separator && items[mouse_over].submenu && submenu_over != mouse_over) {
+			}
+		} else if (p_event->is_action("ui_accept", true) && p_event->is_pressed()) {
+			if (mouse_over >= 0 && mouse_over < items.size() && !items[mouse_over].separator) {
+				if (items[mouse_over].submenu && submenu_over != mouse_over) {
 					_activate_submenu(mouse_over, true);
-					set_input_as_handled();
 				} else {
-					Node *n = get_parent();
-					if (n && Object::cast_to<MenuBar>(n)) {
-						Object::cast_to<MenuBar>(n)->gui_input(p_event);
-						set_input_as_handled();
-						return;
-					}
+					activate_item(mouse_over);
 				}
-			} else if (p_event->is_action("ui_accept", true)) {
-				if (mouse_over >= 0 && mouse_over < items.size() && !items[mouse_over].separator) {
-					if (items[mouse_over].submenu && submenu_over != mouse_over) {
-						_activate_submenu(mouse_over, true);
-					} else {
-						activate_item(mouse_over);
-					}
-					set_input_as_handled();
-				}
+				set_input_as_handled();
 			}
 		}
 	}
@@ -1076,13 +1112,12 @@ void PopupMenu::_update_search_bar_visibility() {
 	}
 }
 
-bool PopupMenu::_highlight_first_available_item(int p_from, int p_to, bool p_reversed) {
-	bool highlighted = false;
-	int to = p_to > -1 ? p_to : items.size();
+void PopupMenu::_items_focus_entered() {
+	if (mouse_over != -1) {
+		return;
+	}
 
-	for (int i = p_from;
-			p_reversed ? (i >= to) : (i < to);
-			p_reversed ? i-- : i++) {
+	for (int i = 0; i < items.size(); i++) {
 		if (!items[i].separator && !items[i].disabled && items[i].visible) {
 			prev_mouse_over = mouse_over;
 			mouse_over = i;
@@ -1090,11 +1125,9 @@ bool PopupMenu::_highlight_first_available_item(int p_from, int p_to, bool p_rev
 			scroll_to_item(i);
 			queue_accessibility_update();
 			control->queue_redraw();
-			highlighted = true;
 			break;
 		}
 	}
-	return highlighted;
 }
 
 void PopupMenu::_search_bar_text_changed(const String &p_new_text) {
@@ -3826,6 +3859,7 @@ PopupMenu::PopupMenu() {
 	control->set_focus_mode(Control::FOCUS_ALL);
 	scroll_container->add_child(control, false, INTERNAL_MODE_FRONT);
 	control->connect(SceneStringName(draw), callable_mp(this, &PopupMenu::_draw_items));
+	control->connect(SceneStringName(focus_entered), callable_mp(this, &PopupMenu::_items_focus_entered));
 
 	submenu_timer = memnew(Timer);
 	submenu_timer->set_wait_time(submenu_timer_popup_delay); // Default is 0.2.

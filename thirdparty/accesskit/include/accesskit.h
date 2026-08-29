@@ -19,44 +19,6 @@
 #ifdef __ANDROID__
 #include <jni.h>
 #endif
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-/* Older SDKs may not define all of these; force them to 0 so the
-   value-based checks below are safe. */
-#ifndef TARGET_OS_OSX
-#define TARGET_OS_OSX 0
-#endif
-#ifndef TARGET_OS_IOS
-#define TARGET_OS_IOS 0
-#endif
-#ifndef TARGET_OS_TV
-#define TARGET_OS_TV 0
-#endif
-#ifndef TARGET_OS_WATCH
-#define TARGET_OS_WATCH 0
-#endif
-#ifndef TARGET_OS_VISION
-#define TARGET_OS_VISION 0
-#endif
-#ifndef TARGET_OS_MACCATALYST
-#define TARGET_OS_MACCATALYST 0
-#endif
-#if TARGET_OS_OSX
-#define ACCESSKIT_MACOS
-#endif
-#if TARGET_OS_IOS || TARGET_OS_MACCATALYST
-#define ACCESSKIT_IOS
-#endif
-#if TARGET_OS_TV
-#define ACCESSKIT_TVOS
-#endif
-#if TARGET_OS_WATCH
-#define ACCESSKIT_WATCHOS
-#endif
-#if TARGET_OS_VISION
-#define ACCESSKIT_VISIONOS
-#endif
-#endif /* __APPLE__ */
 
 /**
  * An action to be taken on an accessibility node.
@@ -630,31 +592,15 @@ typedef struct accesskit_android_queued_events accesskit_android_queued_events;
 
 typedef struct accesskit_custom_action accesskit_custom_action;
 
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-typedef struct accesskit_ios_adapter accesskit_ios_adapter;
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-typedef struct accesskit_ios_queued_events accesskit_ios_queued_events;
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-typedef struct accesskit_ios_subclassing_adapter
-    accesskit_ios_subclassing_adapter;
-#endif
-
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 typedef struct accesskit_macos_adapter accesskit_macos_adapter;
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 typedef struct accesskit_macos_queued_events accesskit_macos_queued_events;
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 typedef struct accesskit_macos_subclassing_adapter
     accesskit_macos_subclassing_adapter;
 #endif
@@ -2615,167 +2561,7 @@ void accesskit_android_injecting_adapter_update_if_active(
     void *update_factory_userdata);
 #endif
 
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * Memory is also freed when calling this function.
- */
-void accesskit_ios_queued_events_raise(
-    struct accesskit_ios_queued_events *events);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * This function must be called on the main thread.
- * All handlers will always be called on the main thread.
- *
- * # Safety
- *
- * `view` must be a valid, unreleased pointer to a `UIView`.
- */
-struct accesskit_ios_adapter *accesskit_ios_adapter_new(
-    void *view, accesskit_activation_handler_callback activation_handler,
-    void *activation_handler_userdata,
-    accesskit_action_handler_callback action_handler,
-    void *action_handler_userdata,
-    accesskit_deactivation_handler_callback deactivation_handler,
-    void *deactivation_handler_userdata);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-void accesskit_ios_adapter_free(struct accesskit_ios_adapter *adapter);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * You must call `accesskit_ios_queued_events_raise` on the returned pointer. It
- * can be null if the adapter is not active.
- */
-struct accesskit_ios_queued_events *accesskit_ios_adapter_update_if_active(
-    struct accesskit_ios_adapter *adapter,
-    accesskit_tree_update_factory update_factory,
-    void *update_factory_userdata);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * Call this when the host view has just appeared on screen. If an
- * assistive technology is running, this proactively builds the
- * accessibility tree.
- *
- * You must call `accesskit_ios_queued_events_raise` on the returned pointer. It
- * can be null if the adapter is not active.
- */
-struct accesskit_ios_queued_events *accesskit_ios_adapter_view_did_appear(
-    struct accesskit_ios_adapter *adapter);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * Returns whether the view itself is an accessibility element.
- * This corresponds to `isAccessibilityElement`.
- */
-bool accesskit_ios_adapter_is_accessibility_element(
-    struct accesskit_ios_adapter *adapter);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * Returns a pointer to an `NSArray` of accessibility elements
- * contained in the view. Ownership of the pointer is not transferred.
- * This corresponds to `accessibilityElements`.
- */
-void *accesskit_ios_adapter_accessibility_elements(
-    struct accesskit_ios_adapter *adapter);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * Returns a pointer to the accessibility element at the specified point,
- * or null if none. Ownership of the pointer is not transferred.
- * This corresponds to `accessibilityHitTest:`.
- */
-void *accesskit_ios_adapter_hit_test(struct accesskit_ios_adapter *adapter,
-                                     double x, double y);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * Caller must call `accesskit_string_free` with the return value.
- */
-char *accesskit_ios_adapter_debug(const struct accesskit_ios_adapter *adapter);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * All handlers will always be called on the main thread.
- *
- * # Safety
- *
- * `view` must be a valid, unreleased pointer to a `UIView`.
- */
-struct accesskit_ios_subclassing_adapter *accesskit_ios_subclassing_adapter_new(
-    void *view, accesskit_activation_handler_callback activation_handler,
-    void *activation_handler_userdata,
-    accesskit_action_handler_callback action_handler,
-    void *action_handler_userdata,
-    accesskit_deactivation_handler_callback deactivation_handler,
-    void *deactivation_handler_userdata);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * All handlers will always be called on the main thread.
- *
- * # Safety
- *
- * `window` must be a valid, unreleased pointer to a `UIWindow`.
- *
- * # Panics
- *
- * This function panics if the specified window doesn't currently have
- * a root view controller with a view.
- */
-struct accesskit_ios_subclassing_adapter *
-accesskit_ios_subclassing_adapter_for_window(
-    void *window, accesskit_activation_handler_callback activation_handler,
-    void *activation_handler_userdata,
-    accesskit_action_handler_callback action_handler,
-    void *action_handler_userdata,
-    accesskit_deactivation_handler_callback deactivation_handler,
-    void *deactivation_handler_userdata);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-void accesskit_ios_subclassing_adapter_free(
-    struct accesskit_ios_subclassing_adapter *adapter);
-#endif
-
-#if (defined(ACCESSKIT_IOS) || defined(ACCESSKIT_TVOS) || \
-     defined(ACCESSKIT_VISIONOS) || defined(ACCESSKIT_WATCHOS))
-/**
- * You must call `accesskit_ios_queued_events_raise` on the returned pointer. It
- * can be null if the adapter is not active.
- */
-struct accesskit_ios_queued_events *
-accesskit_ios_subclassing_adapter_update_if_active(
-    struct accesskit_ios_subclassing_adapter *adapter,
-    accesskit_tree_update_factory update_factory,
-    void *update_factory_userdata);
-#endif
-
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Memory is also freed when calling this function.
  */
@@ -2783,7 +2569,7 @@ void accesskit_macos_queued_events_raise(
     struct accesskit_macos_queued_events *events);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * # Safety
  *
@@ -2795,11 +2581,11 @@ struct accesskit_macos_adapter *accesskit_macos_adapter_new(
     void *action_handler_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 void accesskit_macos_adapter_free(struct accesskit_macos_adapter *adapter);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * You must call `accesskit_macos_queued_events_raise` on the returned pointer.
  * It can be null if the adapter is not active.
@@ -2810,7 +2596,7 @@ struct accesskit_macos_queued_events *accesskit_macos_adapter_update_if_active(
     void *update_factory_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Update the tree state based on whether the window is focused.
  *
@@ -2822,7 +2608,7 @@ accesskit_macos_adapter_update_view_focus_state(
     struct accesskit_macos_adapter *adapter, bool is_focused);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Returns a pointer to an `NSArray`. Ownership of the pointer is not
  * transferred.
@@ -2833,7 +2619,7 @@ void *accesskit_macos_adapter_view_children(
     void *activation_handler_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Returns a pointer to an `NSObject`. Ownership of the pointer is not
  * transferred.
@@ -2844,7 +2630,7 @@ void *accesskit_macos_adapter_focus(
     void *activation_handler_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Returns a pointer to an `NSObject`. Ownership of the pointer is not
  * transferred.
@@ -2855,7 +2641,7 @@ void *accesskit_macos_adapter_hit_test(
     void *activation_handler_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Caller must call `accesskit_string_free` with the return value.
  */
@@ -2863,7 +2649,7 @@ char *accesskit_macos_adapter_debug(
     const struct accesskit_macos_adapter *adapter);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * # Safety
  *
@@ -2877,7 +2663,7 @@ accesskit_macos_subclassing_adapter_new(
     void *action_handler_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * # Safety
  *
@@ -2896,12 +2682,12 @@ accesskit_macos_subclassing_adapter_for_window(
     void *action_handler_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 void accesskit_macos_subclassing_adapter_free(
     struct accesskit_macos_subclassing_adapter *adapter);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * You must call `accesskit_macos_queued_events_raise` on the returned pointer.
  * It can be null if the adapter is not active.
@@ -2913,7 +2699,7 @@ accesskit_macos_subclassing_adapter_update_if_active(
     void *update_factory_userdata);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Update the tree state based on whether the window is focused.
  *
@@ -2925,7 +2711,7 @@ accesskit_macos_subclassing_adapter_update_view_focus_state(
     struct accesskit_macos_subclassing_adapter *adapter, bool is_focused);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Modifies the specified class, which must be a subclass of `NSWindow`,
  * to include an `accessibilityFocusedUIElement` method that calls
@@ -2946,7 +2732,7 @@ void accesskit_macos_add_focus_forwarder_to_window_class(
     const char *class_name);
 #endif
 
-#if defined(ACCESSKIT_MACOS)
+#if defined(__APPLE__)
 /**
  * Modifies the specified class, which must be a subclass of `NSWindow`,
  * to include an `accessibilityFocusedUIElement` method that calls

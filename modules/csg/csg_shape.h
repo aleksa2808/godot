@@ -134,7 +134,6 @@ public:
 
 	virtual AABB get_aabb() const override;
 
-#ifndef PHYSICS_3D_DISABLED
 	void set_use_collision(bool p_enable);
 	bool is_using_collision() const;
 
@@ -154,7 +153,6 @@ public:
 
 	void set_collision_priority(real_t p_priority);
 	real_t get_collision_priority() const;
-#endif // PHYSICS_3D_DISABLED
 
 	void set_autosmooth(bool p_smooth);
 	bool is_autosmooth() const;

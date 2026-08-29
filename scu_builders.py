@@ -317,6 +317,7 @@ def generate_scu_files(max_includes_per_scu):
     process_folder(["editor/scene"])
     process_folder(["editor/scene/2d"])
     process_folder(["editor/scene/2d/physics"])
+    process_folder(["editor/scene/2d/tiles"])
     process_folder(["editor/scene/3d"])
     process_folder(["editor/scene/3d/gizmos"])
     process_folder(["editor/scene/gui"])
@@ -376,7 +377,7 @@ def generate_scu_files(max_includes_per_scu):
     )
     process_folder(["modules/openxr/extensions/spatial_entities"])
     process_folder(["modules/openxr/scene"])
-    process_folder(["modules/tilemap"])
+
     process_folder(["modules/webrtc"])
     process_folder(["modules/websocket"])
     process_folder(["modules/webxr"])

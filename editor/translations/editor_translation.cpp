@@ -51,10 +51,8 @@ Vector<String> get_editor_locales() {
 }
 
 static void _load(const Ref<TranslationDomain> p_domain, const String &p_locale, const EditorTranslationList *p_etl) {
-	String full_locale = p_locale;
-	String base_locale = p_locale.get_slicec('@', 0).split("_")[0];
 	for (const EditorTranslationList *etl = p_etl; etl->data; etl++) {
-		if (etl->lang == full_locale || etl->lang == base_locale) {
+		if (etl->lang == p_locale) {
 			LocalVector<uint8_t> data;
 			data.resize_uninitialized(etl->uncomp_size);
 			const int64_t ret = Compression::decompress(data.ptr(), etl->uncomp_size, etl->data, etl->comp_size, Compression::MODE_DEFLATE);
@@ -68,6 +66,7 @@ static void _load(const Ref<TranslationDomain> p_domain, const String &p_locale,
 			if (tr.is_valid()) {
 				tr->set_locale(etl->lang);
 				p_domain->add_translation(tr);
+				break;
 			}
 		}
 	}

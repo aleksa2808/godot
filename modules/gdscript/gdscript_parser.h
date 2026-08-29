@@ -281,7 +281,7 @@ public:
 	struct ClassDocData {
 		String brief;
 		String description;
-		LocalVector<Pair<String, String>> tutorials;
+		Vector<Pair<String, String>> tutorials;
 		bool is_deprecated = false;
 		String deprecated_message;
 		bool is_experimental = false;
@@ -372,8 +372,8 @@ public:
 
 	struct AnnotationNode : public Node {
 		StringName name;
-		LocalVector<ExpressionNode *> arguments;
-		LocalVector<Variant> resolved_arguments;
+		Vector<ExpressionNode *> arguments;
+		Vector<Variant> resolved_arguments;
 
 		/** Information of the annotation. Might be null for unknown annotations. */
 		AnnotationInfo *info = nullptr;
@@ -390,7 +390,7 @@ public:
 	};
 
 	struct ArrayNode : public ExpressionNode {
-		LocalVector<ExpressionNode *> elements;
+		Vector<ExpressionNode *> elements;
 
 		ArrayNode() {
 			type = ARRAY;
@@ -506,7 +506,7 @@ public:
 
 	struct CallNode : public ExpressionNode {
 		ExpressionNode *callee = nullptr;
-		LocalVector<ExpressionNode *> arguments;
+		Vector<ExpressionNode *> arguments;
 		StringName function_name;
 		bool is_super = false;
 		bool is_static = false;
@@ -552,7 +552,7 @@ public:
 		};
 
 		IdentifierNode *identifier = nullptr;
-		LocalVector<Value> values;
+		Vector<Value> values;
 		Variant dictionary;
 #ifdef TOOLS_ENABLED
 		MemberDocData doc_data;
@@ -751,8 +751,8 @@ public:
 		IdentifierNode *identifier = nullptr;
 		String icon_path;
 		String simplified_icon_path;
-		LocalVector<Member> members;
-		HashMap<StringName, uint32_t> members_indices;
+		Vector<Member> members;
+		HashMap<StringName, int> members_indices;
 		ClassNode *outer = nullptr;
 		bool extends_used = false;
 		bool onready_used = false;
@@ -777,8 +777,8 @@ public:
 
 		// EnumValue docs are parsed after itself, so we need a method to add/modify the doc property later.
 		void set_enum_value_doc_data(const StringName &p_name, const MemberDocData &p_doc_data) {
-			ERR_FAIL_UNSIGNED_INDEX(members_indices[p_name], members.size());
-			members[members_indices[p_name]].enum_value.doc_data = p_doc_data;
+			ERR_FAIL_INDEX(members_indices[p_name], members.size());
+			members.write[members_indices[p_name]].enum_value.doc_data = p_doc_data;
 		}
 #endif // TOOLS_ENABLED
 
@@ -840,7 +840,7 @@ public:
 			ExpressionNode *key = nullptr;
 			ExpressionNode *value = nullptr;
 		};
-		LocalVector<Pair> elements;
+		Vector<Pair> elements;
 
 		enum Style {
 			LUA_TABLE,
@@ -867,8 +867,8 @@ public:
 
 	struct FunctionNode : public Node {
 		IdentifierNode *identifier = nullptr;
-		LocalVector<ParameterNode *> parameters;
-		HashMap<StringName, uint32_t> parameters_indices;
+		Vector<ParameterNode *> parameters;
+		HashMap<StringName, int> parameters_indices;
 		ParameterNode *rest_parameter = nullptr;
 
 		TypeNode *return_type = nullptr;
@@ -881,7 +881,7 @@ public:
 		Variant rpc_config;
 		MethodInfo info;
 		LambdaNode *source_lambda = nullptr;
-		LocalVector<Variant> default_arg_values;
+		Vector<Variant> default_arg_values;
 
 		int header_end_line = 0;
 		int header_end_column = 0;
@@ -965,8 +965,8 @@ public:
 		FunctionNode *function = nullptr;
 		FunctionNode *parent_function = nullptr;
 		LambdaNode *parent_lambda = nullptr;
-		LocalVector<IdentifierNode *> captures;
-		HashMap<StringName, uint32_t> captures_indices;
+		Vector<IdentifierNode *> captures;
+		HashMap<StringName, int> captures_indices;
 		bool use_self = false;
 
 		bool has_name() const {
@@ -988,7 +988,7 @@ public:
 
 	struct MatchNode : public Node {
 		ExpressionNode *test = nullptr;
-		LocalVector<MatchBranchNode *> branches;
+		Vector<MatchBranchNode *> branches;
 
 		MatchNode() {
 			type = MATCH;
@@ -996,7 +996,7 @@ public:
 	};
 
 	struct MatchBranchNode : public Node {
-		LocalVector<PatternNode *> patterns;
+		Vector<PatternNode *> patterns;
 		SuiteNode *block = nullptr;
 		bool has_wildcard = false;
 		SuiteNode *guard_body = nullptr;
@@ -1037,14 +1037,14 @@ public:
 			IdentifierNode *bind;
 			ExpressionNode *expression;
 		};
-		LocalVector<PatternNode *> array;
+		Vector<PatternNode *> array;
 		bool rest_used = false; // For array/dict patterns.
 
 		struct Pair {
 			ExpressionNode *key = nullptr;
 			PatternNode *value_pattern = nullptr;
 		};
-		LocalVector<Pair> dictionary;
+		Vector<Pair> dictionary;
 
 		HashMap<StringName, IdentifierNode *> binds;
 
@@ -1087,8 +1087,8 @@ public:
 
 	struct SignalNode : public Node {
 		IdentifierNode *identifier = nullptr;
-		LocalVector<ParameterNode *> parameters;
-		HashMap<StringName, uint32_t> parameters_indices;
+		Vector<ParameterNode *> parameters;
+		HashMap<StringName, int> parameters_indices;
 		MethodInfo method_info;
 #ifdef TOOLS_ENABLED
 		MemberDocData doc_data;
@@ -1121,7 +1121,7 @@ public:
 		DataType suite_type;
 
 		SuiteNode *parent_block = nullptr;
-		LocalVector<Node *> statements;
+		Vector<Node *> statements;
 		struct Local {
 			enum Type {
 				UNDEFINED,
@@ -1196,8 +1196,8 @@ public:
 			}
 		};
 		Local empty;
-		LocalVector<Local> locals;
-		HashMap<StringName, uint32_t> locals_indices;
+		Vector<Local> locals;
+		HashMap<StringName, int> locals_indices;
 
 		FunctionNode *parent_function = nullptr;
 		IfNode *parent_if = nullptr;
@@ -1236,13 +1236,13 @@ public:
 	};
 
 	struct TypeNode : public Node {
-		LocalVector<IdentifierNode *> type_chain;
-		LocalVector<TypeNode *> container_types;
+		Vector<IdentifierNode *> type_chain;
+		Vector<TypeNode *> container_types;
 
 		DataType resolved_type;
 
-		TypeNode *get_container_type_or_null(uint32_t p_index) const {
-			return p_index < container_types.size() ? container_types[p_index] : nullptr;
+		TypeNode *get_container_type_or_null(int p_index) const {
+			return p_index >= 0 && p_index < container_types.size() ? container_types[p_index] : nullptr;
 		}
 
 		TypeNode() {
@@ -1654,8 +1654,6 @@ private:
 	ExpressionNode *parse_yield(ExpressionNode *p_previous_operand, bool p_can_assign);
 	ExpressionNode *parse_invalid_token(ExpressionNode *p_previous_operand, bool p_can_assign);
 	TypeNode *parse_type(bool p_allow_void = false);
-	// TODO: Remove in 5.x.
-	bool parse_standalone_string();
 
 #ifdef TOOLS_ENABLED
 	int max_script_doc_line = INT_MAX;
@@ -1715,42 +1713,42 @@ public:
 		void push_text(const String &p_text);
 
 		void print_annotation(const AnnotationNode *p_annotation);
-		void print_array(const ArrayNode *p_array);
-		void print_assert(const AssertNode *p_assert);
-		void print_assignment(const AssignmentNode *p_assignment);
-		void print_await(const AwaitNode *p_await);
-		void print_binary_op(const BinaryOpNode *p_binary_op);
-		void print_call(const CallNode *p_call);
-		void print_cast(const CastNode *p_cast);
-		void print_class(const ClassNode *p_class);
-		void print_constant(const ConstantNode *p_constant);
-		void print_dictionary(const DictionaryNode *p_dictionary);
-		void print_expression(const ExpressionNode *p_expression);
-		void print_enum(const EnumNode *p_enum);
-		void print_for(const ForNode *p_for);
-		void print_function(const FunctionNode *p_function, const String &p_context = "Function");
-		void print_get_node(const GetNodeNode *p_get_node);
-		void print_if(const IfNode *p_if, bool p_is_elif = false);
-		void print_identifier(const IdentifierNode *p_identifier);
-		void print_lambda(const LambdaNode *p_lambda);
-		void print_literal(const LiteralNode *p_literal);
-		void print_match(const MatchNode *p_match);
-		void print_match_branch(const MatchBranchNode *p_match_branch);
-		void print_match_pattern(const PatternNode *p_match_pattern);
-		void print_parameter(const ParameterNode *p_parameter);
-		void print_preload(const PreloadNode *p_preload);
-		void print_return(const ReturnNode *p_return);
-		void print_self(const SelfNode *p_self);
-		void print_signal(const SignalNode *p_signal);
-		void print_statement(const Node *p_statement);
-		void print_subscript(const SubscriptNode *p_subscript);
-		void print_suite(const SuiteNode *p_suite);
-		void print_ternary_op(const TernaryOpNode *p_ternary_op);
-		void print_type(const TypeNode *p_type);
-		void print_type_test(const TypeTestNode *p_type_test);
-		void print_unary_op(const UnaryOpNode *p_unary_op);
-		void print_variable(const VariableNode *p_variable);
-		void print_while(const WhileNode *p_while);
+		void print_array(ArrayNode *p_array);
+		void print_assert(AssertNode *p_assert);
+		void print_assignment(AssignmentNode *p_assignment);
+		void print_await(AwaitNode *p_await);
+		void print_binary_op(BinaryOpNode *p_binary_op);
+		void print_call(CallNode *p_call);
+		void print_cast(CastNode *p_cast);
+		void print_class(ClassNode *p_class);
+		void print_constant(ConstantNode *p_constant);
+		void print_dictionary(DictionaryNode *p_dictionary);
+		void print_expression(ExpressionNode *p_expression);
+		void print_enum(EnumNode *p_enum);
+		void print_for(ForNode *p_for);
+		void print_function(FunctionNode *p_function, const String &p_context = "Function");
+		void print_get_node(GetNodeNode *p_get_node);
+		void print_if(IfNode *p_if, bool p_is_elif = false);
+		void print_identifier(IdentifierNode *p_identifier);
+		void print_lambda(LambdaNode *p_lambda);
+		void print_literal(LiteralNode *p_literal);
+		void print_match(MatchNode *p_match);
+		void print_match_branch(MatchBranchNode *p_match_branch);
+		void print_match_pattern(PatternNode *p_match_pattern);
+		void print_parameter(ParameterNode *p_parameter);
+		void print_preload(PreloadNode *p_preload);
+		void print_return(ReturnNode *p_return);
+		void print_self(SelfNode *p_self);
+		void print_signal(SignalNode *p_signal);
+		void print_statement(Node *p_statement);
+		void print_subscript(SubscriptNode *p_subscript);
+		void print_suite(SuiteNode *p_suite);
+		void print_ternary_op(TernaryOpNode *p_ternary_op);
+		void print_type(TypeNode *p_type);
+		void print_type_test(TypeTestNode *p_type_test);
+		void print_unary_op(UnaryOpNode *p_unary_op);
+		void print_variable(VariableNode *p_variable);
+		void print_while(WhileNode *p_while);
 
 	public:
 		void print_tree(const GDScriptParser &p_parser);

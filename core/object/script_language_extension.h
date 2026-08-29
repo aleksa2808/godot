@@ -279,18 +279,6 @@ private:
 			return script_language->lookup_code(p_code, p_symbol, p_path, p_owner, r_result);
 		}
 
-		virtual int32_t find_function(const String &p_function, const String &p_code) const override {
-			return script_language->find_function(p_function, p_code);
-		}
-
-		virtual void format_code(String &r_code, uint32_t p_from_line, uint32_t p_to_line) const override {
-			return script_language->auto_indent_code(r_code, p_from_line, p_to_line);
-		}
-
-		virtual bool validate(const String &p_code, const String &p_path, List<ScriptError> *r_errors, List<Warning> *r_warnings, List<String> *r_functions, HashSet<int> *r_safe_lines) const override {
-			return script_language->validate(p_code, p_path, r_functions, r_errors, r_warnings, r_safe_lines);
-		}
-
 		EditorAdapter(ScriptLanguageExtension *p_script_language) {
 			script_language = p_script_language;
 		}
@@ -367,9 +355,7 @@ public:
 	EXBIND0R(bool, is_using_templates)
 
 	GDVIRTUAL6RC_REQUIRED(Dictionary, _validate, const String &, const String &, bool, bool, bool, bool)
-
-#ifdef TOOLS_ENABLED
-	bool validate(const String &p_script, const String &p_path = "", List<String> *r_functions = nullptr, List<EditorLanguage::ScriptError> *r_errors = nullptr, List<EditorLanguage::Warning> *r_warnings = nullptr, HashSet<int> *r_safe_lines = nullptr) const {
+	virtual bool validate(const String &p_script, const String &p_path = "", List<String> *r_functions = nullptr, List<ScriptError> *r_errors = nullptr, List<Warning> *r_warnings = nullptr, HashSet<int> *r_safe_lines = nullptr) const override {
 		Dictionary ret;
 		GDVIRTUAL_CALL(_validate, p_script, p_path, r_functions != nullptr, r_errors != nullptr, r_warnings != nullptr, r_safe_lines != nullptr, ret);
 		if (!ret.has("valid")) {
@@ -389,14 +375,12 @@ public:
 				ERR_CONTINUE(!err.has("column"));
 				ERR_CONTINUE(!err.has("message"));
 
-				EditorLanguage::ScriptError serr;
+				ScriptError serr;
 				if (err.has("path")) {
 					serr.path = err["path"];
 				}
-				serr.start_line = err["line"];
-				serr.start_column = err["column"];
-				serr.end_line = err["line"];
-				serr.end_column = err["column"];
+				serr.line = err["line"];
+				serr.column = err["column"];
 				serr.message = err["message"];
 
 				r_errors->push_back(serr);
@@ -409,12 +393,14 @@ public:
 				Dictionary warn = warning;
 				ERR_CONTINUE(!warn.has("start_line"));
 				ERR_CONTINUE(!warn.has("end_line"));
+				ERR_CONTINUE(!warn.has("code"));
 				ERR_CONTINUE(!warn.has("string_code"));
 				ERR_CONTINUE(!warn.has("message"));
 
-				EditorLanguage::Warning swarn;
+				Warning swarn;
 				swarn.start_line = warn["start_line"];
 				swarn.end_line = warn["end_line"];
+				swarn.code = warn["code"];
 				swarn.string_code = warn["string_code"];
 				swarn.message = warn["message"];
 
@@ -429,7 +415,6 @@ public:
 		}
 		return ret["valid"];
 	}
-#endif
 
 	EXBIND1RC(String, validate_path, const String &)
 #ifndef DISABLE_DEPRECATED
@@ -440,17 +425,7 @@ public:
 	EXBIND0RC(bool, supports_documentation)
 	EXBIND0RC(bool, can_inherit_from_file)
 
-	GDVIRTUAL2RC_REQUIRED(int, _find_function, const String &, const String &)
-#ifdef TOOLS_ENABLED
-	int32_t find_function(const String &p_function, const String &p_code) {
-		int32_t ret = -1;
-		if (GDVIRTUAL_CALL(_find_function, p_function, p_code, ret)) {
-			return ret;
-		}
-		return -1;
-	}
-#endif // TOOLS_ENABLED
-
+	EXBIND2RC(int, find_function, const String &, const String &)
 	EXBIND3RC(String, make_function, const String &, const String &, const PackedStringArray &)
 	EXBIND0RC(bool, can_make_function)
 	EXBIND3R(Error, open_in_external_editor, const Ref<Script> &, int, int)
@@ -556,15 +531,11 @@ public:
 #endif // TOOLS_ENABLED
 
 	GDVIRTUAL3RC_REQUIRED(String, _auto_indent_code, const String &, int, int)
-
-#ifdef TOOLS_ENABLED
-	void auto_indent_code(String &p_code, int p_from_line, int p_to_line) const {
+	virtual void auto_indent_code(String &p_code, int p_from_line, int p_to_line) const override {
 		String ret;
 		GDVIRTUAL_CALL(_auto_indent_code, p_code, p_from_line, p_to_line, ret);
 		p_code = ret;
 	}
-#endif
-
 	EXBIND2(add_global_constant, const StringName &, const Variant &)
 	EXBIND2(add_named_global_constant, const StringName &, const Variant &)
 	EXBIND1(remove_named_global_constant, const StringName &)
@@ -671,19 +642,19 @@ public:
 	}
 
 	EXBIND0(reload_all_scripts)
-	GDVIRTUAL2_REQUIRED(_reload_scripts, const Array &, bool);
-	virtual void reload_scripts(const Array &p_scripts) override {
-		GDVIRTUAL_CALL(_reload_scripts, p_scripts, true);
-	}
-	GDVIRTUAL2_REQUIRED(_reload_tool_script, const Ref<Script> &, bool);
-	virtual void reload_tool_script(const Ref<Script> &p_script) override {
-		GDVIRTUAL_CALL(_reload_tool_script, p_script, true);
-	}
+	EXBIND2(reload_scripts, const Array &, bool)
+	EXBIND2(reload_tool_script, const Ref<Script> &, bool)
 	/* LOADER FUNCTIONS */
 
-#ifndef DISABLE_DEPRECATED
-	GDVIRTUAL0RC(PackedStringArray, _get_recognized_extensions)
-#endif
+	GDVIRTUAL0RC_REQUIRED(PackedStringArray, _get_recognized_extensions)
+
+	virtual void get_recognized_extensions(List<String> *p_extensions) const override {
+		PackedStringArray ret;
+		GDVIRTUAL_CALL(_get_recognized_extensions, ret);
+		for (int i = 0; i < ret.size(); i++) {
+			p_extensions->push_back(ret[i]);
+		}
+	}
 
 	GDVIRTUAL0RC_REQUIRED(TypedArray<Dictionary>, _get_public_functions)
 	virtual void get_public_functions(List<MethodInfo> *p_functions) const override {
@@ -890,12 +861,12 @@ public:
 		List<Pair<StringName, Variant>> *state = (List<Pair<StringName, Variant>> *)p_userdata;
 		state->push_back(Pair<StringName, Variant>(*(const StringName *)p_name, *(const Variant *)p_value));
 	}
-	virtual void get_property_state(List<Pair<StringName, Variant>> &r_state) override {
+	virtual void get_property_state(List<Pair<StringName, Variant>> &state) override {
 		if (native_info->get_property_state_func) {
-			native_info->get_property_state_func(instance, _add_property_with_state, &r_state);
+			native_info->get_property_state_func(instance, _add_property_with_state, &state);
 			return;
 		}
-		ScriptInstance::get_property_state(r_state);
+		ScriptInstance::get_property_state(state);
 	}
 
 	virtual void get_method_list(List<MethodInfo> *p_list) const override {

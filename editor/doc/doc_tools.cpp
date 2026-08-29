@@ -623,7 +623,7 @@ void DocTools::generate(BitField<GenerateFlags> p_flags) {
 
 				bool found_type = false;
 				if (getter != StringName()) {
-					const MethodBind *mb = ClassDB::get_method(name, getter);
+					MethodBind *mb = ClassDB::get_method(name, getter);
 					if (mb) {
 						PropertyInfo retinfo = mb->get_return_info();
 
@@ -1034,7 +1034,7 @@ void DocTools::generate(BitField<GenerateFlags> p_flags) {
 		// FIXME: this is kind of hackish...
 		for (const Engine::Singleton &s : singletons) {
 			DocData::PropertyDoc pd;
-			if (!s.ptr || s.user_created) {
+			if (!s.ptr) {
 				continue;
 			}
 			pd.name = s.name;
@@ -1294,7 +1294,10 @@ Error DocTools::load_classes(const String &p_dir) {
 	while (!path.is_empty()) {
 		if (!da->current_is_dir() && path.ends_with("xml")) {
 			Ref<XMLParser> parser = memnew(XMLParser);
-			RETURN_IF_ERROR(parser->open(p_dir.path_join(path)));
+			Error err2 = parser->open(p_dir.path_join(path));
+			if (err2) {
+				return err2;
+			}
 
 			_load(parser);
 		}
@@ -1874,7 +1877,10 @@ Error DocTools::load_compressed(const uint8_t *p_data, int64_t p_compressed_size
 	class_list.clear();
 
 	Ref<XMLParser> parser = memnew(XMLParser);
-	RETURN_IF_ERROR(parser->open_buffer(data));
+	Error err = parser->open_buffer(data);
+	if (err) {
+		return err;
+	}
 
 	_load(parser);
 
@@ -1883,7 +1889,10 @@ Error DocTools::load_compressed(const uint8_t *p_data, int64_t p_compressed_size
 
 Error DocTools::load_xml(const uint8_t *p_data, int64_t p_size) {
 	Ref<XMLParser> parser = memnew(XMLParser);
-	RETURN_IF_ERROR(parser->_open_buffer(p_data, p_size));
+	Error err = parser->_open_buffer(p_data, p_size);
+	if (err) {
+		return err;
+	}
 
 	_load(parser);
 

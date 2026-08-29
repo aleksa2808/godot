@@ -49,6 +49,7 @@
 #include "drivers/windows/net_socket_winsock.h"
 #include "drivers/windows/thread_windows.h"
 #include "main/main.h"
+#include "servers/audio/audio_server.h"
 #include "servers/rendering/rendering_server.h"
 #include "servers/text/text_server.h"
 
@@ -346,7 +347,9 @@ void OS_Windows::initialize() {
 }
 
 void OS_Windows::delete_main_loop() {
-	memdelete(main_loop);
+	if (main_loop) {
+		memdelete(main_loop);
+	}
 	main_loop = nullptr;
 }
 
@@ -375,7 +378,9 @@ void OS_Windows::finalize() {
 	driver_midi.close();
 #endif
 
-	memdelete(main_loop);
+	if (main_loop) {
+		memdelete(main_loop);
+	}
 
 	main_loop = nullptr;
 }
@@ -1942,7 +1947,7 @@ Vector<String> OS_Windows::get_system_font_path_for_text(const String &p_font_na
 
 	Vector<String> ret;
 	for (UINT32 i = 0; i < number_of_files; i++) {
-		const void *reference_key = nullptr;
+		void const *reference_key = nullptr;
 		UINT32 reference_key_size = 0;
 		ComAutoreleaseRef<IDWriteLocalFontFileLoader> loader;
 
@@ -2021,7 +2026,7 @@ String OS_Windows::get_system_font_path(const String &p_font_name, int p_weight,
 	}
 
 	for (UINT32 i = 0; i < number_of_files; i++) {
-		const void *reference_key = nullptr;
+		void const *reference_key = nullptr;
 		UINT32 reference_key_size = 0;
 		ComAutoreleaseRef<IDWriteLocalFontFileLoader> loader;
 
@@ -2525,36 +2530,6 @@ String OS_Windows::expand_path(const String &p_path) const {
 		}
 	}
 
-	int pos = 0;
-
-	while (true) {
-		int left = path.find_char('%', pos);
-		if (left == -1) {
-			break;
-		}
-
-		int right = path.find_char('%', left + 1);
-		if (right == -1) {
-			break;
-		}
-
-		String var = path.substr(left + 1, right - left - 1);
-
-		if (var.is_empty()) {
-			pos = right + 1;
-			continue;
-		}
-
-		String value = get_environment(var);
-
-		if (!value.is_empty()) {
-			path = path.substr(0, left) + value + path.substr(right + 1);
-			pos = left + value.length();
-		} else {
-			pos = right + 1;
-		}
-	}
-
 	return path;
 }
 
@@ -2795,7 +2770,9 @@ bool OS_Windows::_test_create_rendering_device_and_gl(const String &p_display_dr
 	}
 
 #ifdef GLES3_ENABLED
-	memdelete(test_gl_manager_native);
+	if (test_gl_manager_native) {
+		memdelete(test_gl_manager_native);
+	}
 #endif
 
 	DestroyWindow(hWnd);
@@ -2936,8 +2913,6 @@ OS_Windows::OS_Windows(HINSTANCE _hInstance) {
 
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
-	WinRTUtils::init();
-
 #ifdef WASAPI_ENABLED
 	AudioDriverManager::add_driver(&driver_wasapi);
 #endif
@@ -2967,6 +2942,5 @@ OS_Windows::OS_Windows(HINSTANCE _hInstance) {
 }
 
 OS_Windows::~OS_Windows() {
-	WinRTUtils::cleanup();
 	CoUninitialize();
 }

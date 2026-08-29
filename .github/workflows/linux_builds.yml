@@ -59,7 +59,6 @@ jobs:
               use_ubsan=yes
               linker=mold
             bin: ./bin/godot.linuxbsd.editor.dev.double.x86_64.san
-            install-mold: true
             proj-test: true
             free-space: true
 
@@ -120,7 +119,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -181,10 +180,8 @@ jobs:
           fi
 
       - name: Install mold linker
-        if: matrix.install-mold
+        if: matrix.proj-test
         uses: rui314/setup-mold@v1
-        with:
-          make-default: false
 
       - name: Compilation
         uses: ./.github/actions/godot-build

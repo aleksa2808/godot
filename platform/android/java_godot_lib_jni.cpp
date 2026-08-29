@@ -50,8 +50,6 @@
 #include "core/input/input.h"
 #include "core/os/main_loop.h"
 #include "core/os/os.h"
-#include "core/os/thread.h"
-#include "core/os/thread_safe.h"
 #include "core/profiling/profiling.h"
 #include "main/main.h"
 #include "servers/camera/camera_server.h"
@@ -101,7 +99,9 @@ static void _terminate(JNIEnv *env, bool p_restart = false) {
 	// Unregister android plugins
 	unregister_plugins_singletons();
 
-	memdelete(java_class_wrapper);
+	if (java_class_wrapper) {
+		memdelete(java_class_wrapper);
+	}
 	if (input_handler) {
 		delete input_handler;
 	}
@@ -230,9 +230,6 @@ JNIEXPORT jboolean JNICALL Java_org_godotengine_godot_GodotLib_setup(JNIEnv *env
 		return false;
 	}
 
-	Thread::release_main_thread(); // setup2 will be called from another thread.
-	set_current_thread_safe_for_nodes(false);
-
 	TTS_Android::setup(p_godot_tts);
 
 	java_class_wrapper = memnew(JavaClassWrapper);
@@ -249,11 +246,8 @@ JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_resize(JNIEnv *env, j
 				ANativeWindow *native_window = ANativeWindow_fromSurface(env, p_surface);
 				os_android->set_native_window(native_window);
 			}
-
-			DisplayServerAndroid *dsa = DisplayServerAndroid::get_singleton();
-			ERR_FAIL_NULL(dsa);
-			dsa->reset_window();
-			dsa->notify_surface_changed(p_width, p_height);
+			DisplayServerAndroid::get_singleton()->reset_window();
+			DisplayServerAndroid::get_singleton()->notify_surface_changed(p_width, p_height);
 		}
 	}
 }
@@ -294,14 +288,8 @@ JNIEXPORT jboolean JNICALL Java_org_godotengine_godot_GodotLib_step(JNIEnv *env,
 
 	if (step.get() == STEP_SETUP) {
 		// Since Godot is initialized on the UI thread, main_thread_id was set to that thread's id,
-		// but for Godot purposes, the main thread is the one running the game loop.
-		// The logo is shown in the next frame otherwise we run into rendering issues.
-		if (Main::setup2(false) != OK) {
-			ERR_PRINT("Unable to complete engine setup!");
-			OS::get_singleton()->alert("Unable to complete engine setup!");
-			_terminate(env, false);
-			return false;
-		}
+		// but for Godot purposes, the main thread is the one running the game loop
+		Main::setup2(false); // The logo is shown in the next frame otherwise we run into rendering issues
 		input_handler = new AndroidInputHandler();
 		step.increment();
 		return true;
@@ -328,10 +316,7 @@ JNIEXPORT jboolean JNICALL Java_org_godotengine_godot_GodotLib_step(JNIEnv *env,
 
 	if (step.get() == STEP_STARTED) {
 		if (Main::start() != EXIT_SUCCESS) {
-			ERR_PRINT("Unable to start engine!");
-			OS::get_singleton()->alert("Unable to start engine!");
-			_terminate(env, false);
-			return false;
+			return true; // should exit instead and print the error
 		}
 
 		godot_java->on_godot_setup_completed(env);
@@ -340,13 +325,10 @@ JNIEXPORT jboolean JNICALL Java_org_godotengine_godot_GodotLib_step(JNIEnv *env,
 		step.increment();
 	}
 
-	DisplayServerAndroid *dsa = DisplayServerAndroid::get_singleton();
-	if (dsa) {
-		dsa->process_accelerometer(accelerometer);
-		dsa->process_gravity(gravity);
-		dsa->process_magnetometer(magnetometer);
-		dsa->process_gyroscope(gyroscope);
-	}
+	DisplayServerAndroid::get_singleton()->process_accelerometer(accelerometer);
+	DisplayServerAndroid::get_singleton()->process_gravity(gravity);
+	DisplayServerAndroid::get_singleton()->process_magnetometer(magnetometer);
+	DisplayServerAndroid::get_singleton()->process_gyroscope(gyroscope);
 
 	bool should_swap_buffers = false;
 	if (os_android->main_loop_iterate(&should_swap_buffers)) {

@@ -34,6 +34,7 @@
 #include "core/os/condition_variable.h"
 #include "core/os/mutex.h"
 #include "core/templates/local_vector.h"
+#include "core/templates/simple_type.h"
 #include "core/templates/tuple.h"
 #include "core/typedefs.h"
 
@@ -53,7 +54,7 @@ class CommandQueueMT {
 	struct Command : public CommandBase {
 		T *instance;
 		M method;
-		Tuple<std::decay_t<Args>...> args;
+		Tuple<GetSimpleTypeT<Args>...> args;
 
 		template <typename... FwdArgs>
 		_FORCE_INLINE_ Command(T *p_instance, M p_method, FwdArgs &&...p_args) :
@@ -81,9 +82,9 @@ class CommandQueueMT {
 		T *instance;
 		M method;
 		R *ret;
-		Tuple<std::decay_t<Args>...> args;
+		Tuple<GetSimpleTypeT<Args>...> args;
 
-		_FORCE_INLINE_ CommandRet(T *p_instance, M p_method, R *p_ret, std::decay_t<Args>... p_args) :
+		_FORCE_INLINE_ CommandRet(T *p_instance, M p_method, R *p_ret, GetSimpleTypeT<Args>... p_args) :
 				CommandBase(true), instance(p_instance), method(p_method), ret(p_ret), args{ p_args... } {}
 
 		void call() override {
@@ -133,9 +134,9 @@ class CommandQueueMT {
 	}
 
 	template <typename T, bool NeedsSync, typename... Args>
-	_FORCE_INLINE_ void _push_internal(Args &&...p_args) {
+	_FORCE_INLINE_ void _push_internal(Args &&...args) {
 		MutexLock mlock(mutex);
-		create_command<T>(std::forward<Args>(p_args)...);
+		create_command<T>(std::forward<Args>(args)...);
 
 		if (pump_task_id != WorkerThreadPool::INVALID_TASK_ID) {
 			WorkerThreadPool::get_singleton()->notify_yield_over(pump_task_id);

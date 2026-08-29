@@ -794,14 +794,23 @@ Error EditorExportPlatformWeb::run(const Ref<EditorExportPreset> &p_preset, int 
 			switch (p_option) {
 				// Run in Browser.
 				case 0: {
-					RETURN_IF_ERROR(_export_project(p_preset, p_debug_flags));
-					RETURN_IF_ERROR(_start_server(bind_host, bind_port, use_tls));
+					Error err = _export_project(p_preset, p_debug_flags);
+					if (err != OK) {
+						return err;
+					}
+					err = _start_server(bind_host, bind_port, use_tls);
+					if (err != OK) {
+						return err;
+					}
 					return _launch_browser(bind_host, bind_port, use_tls);
 				} break;
 
 				// Start HTTP Server.
 				case 1: {
-					RETURN_IF_ERROR(_export_project(p_preset, p_debug_flags));
+					Error err = _export_project(p_preset, p_debug_flags);
+					if (err != OK) {
+						return err;
+					}
 					return _start_server(bind_host, bind_port, use_tls);
 				} break;
 
@@ -815,7 +824,10 @@ Error EditorExportPlatformWeb::run(const Ref<EditorExportPreset> &p_preset, int 
 			switch (p_option) {
 				// Run in Browser.
 				case 0: {
-					RETURN_IF_ERROR(_export_project(p_preset, p_debug_flags));
+					Error err = _export_project(p_preset, p_debug_flags);
+					if (err != OK) {
+						return err;
+					}
 					return _launch_browser(bind_host, bind_port, use_tls);
 				} break;
 

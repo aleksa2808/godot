@@ -33,12 +33,6 @@
 #include "core/templates/vector.h"
 #include "core/typedefs.h"
 
-/**
- * Ordered set container with copy-on-write semantics.
- *
- * Core container guidance:
- * https://docs.godotengine.org/en/latest/engine_details/architecture/core_types.html#containers
- */
 template <typename T>
 class _WARN_UNUSED_ VSet {
 	Vector<T> _data;

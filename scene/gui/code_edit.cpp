@@ -353,8 +353,6 @@ void CodeEdit::_notification(int p_what) {
 						code_completion_rect.position.x = caret_pos.x - code_completion_base_width;
 					}
 
-					code_completion_rect.position.x = MAX(0, code_completion_rect.position.x);
-
 					theme_cache.code_completion_style->draw(ci, Rect2(code_completion_rect.position - theme_cache.code_completion_style->get_offset(), code_completion_rect.size + theme_cache.code_completion_style->get_minimum_size() + Size2(scroll_width, 0)));
 					if (theme_cache.code_completion_background_color.a > 0.01) {
 						RenderingServer::get_singleton()->canvas_item_add_rect(ci, Rect2(code_completion_rect.position, code_completion_rect.size + Size2(scroll_width, 0)), theme_cache.code_completion_background_color);
@@ -698,12 +696,9 @@ void CodeEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 		}
 
 		if (symbol_tooltip_on_hover_enabled) {
-			Point2i last_symbol_tooltip_pos = symbol_tooltip_pos;
 			symbol_tooltip_pos = get_line_column_at_pos(mpos, false, false);
 			symbol_tooltip_word = get_lookup_word(symbol_tooltip_pos.y, symbol_tooltip_pos.x);
-			if (symbol_tooltip_pos != last_symbol_tooltip_pos) {
-				symbol_tooltip_timer->start();
-			}
+			symbol_tooltip_timer->start();
 		}
 
 		bool scroll_hovered = code_completion_scroll_rect.has_point(mpos);
@@ -764,7 +759,6 @@ void CodeEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 	if (!k->is_pressed() || k->get_keycode() == Key::CTRL || k->get_keycode() == Key::ALT || k->get_keycode() == Key::SHIFT || k->get_keycode() == Key::META || k->get_keycode() == Key::CAPSLOCK) {
 		return;
 	}
-	symbol_tooltip_timer->stop();
 
 	// Allow unicode handling if:
 	// No modifiers are pressed (except Shift and CapsLock)
@@ -822,7 +816,7 @@ void CodeEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 			accept_event();
 			return;
 		}
-		if (k->is_action("ui_text_caret_line_end", true)) {
+		if (k->is_action("ui_text_caret_line_start", true) || k->is_action("ui_text_caret_line_end", true)) {
 			cancel_code_completion();
 		}
 		if (k->is_action("ui_text_completion_replace", true) || k->is_action("ui_text_completion_accept", true)) {
@@ -2535,7 +2529,6 @@ void CodeEdit::update_code_completion_options(bool p_forced) {
 	code_completion_forced = p_forced;
 	code_completion_option_sources = code_completion_option_submitted;
 	code_completion_option_submitted.clear();
-	code_completion_caret_line = get_caret_line();
 	_filter_code_completion_candidates_impl();
 }
 
@@ -2822,8 +2815,7 @@ bool CodeEdit::is_symbol_tooltip_on_hover_enabled() const {
 void CodeEdit::_on_symbol_tooltip_timer_timeout() {
 	const int line = symbol_tooltip_pos.y;
 	const int column = symbol_tooltip_pos.x;
-	bool is_mouse_over_code_completion_popup = code_completion_active && code_completion_rect.has_point(get_local_mouse_position());
-	if (line >= 0 && column >= 0 && !symbol_tooltip_word.is_empty() && !Input::get_singleton()->is_anything_pressed() && !is_mouse_over_code_completion_popup) {
+	if (line >= 0 && column >= 0 && !symbol_tooltip_word.is_empty() && !Input::get_singleton()->is_anything_pressed()) {
 		emit_signal(SNAME("symbol_hovered"), symbol_tooltip_word, line, column);
 	}
 }
@@ -3817,11 +3809,6 @@ void CodeEdit::_update_scroll_selected_line(float p_mouse_y) {
 void CodeEdit::_filter_code_completion_candidates_impl() {
 	int line_height = get_line_height();
 
-	const int caret_line = get_caret_line();
-	const int caret_column = get_caret_column();
-	const String line = get_line(caret_line);
-	ERR_FAIL_INDEX_MSG(caret_column, line.length() + 1, "Caret column exceeds line length.");
-
 	if (GDVIRTUAL_IS_OVERRIDDEN(_filter_code_completion_candidates)) {
 		Vector<ScriptLanguage::CodeCompletionOption> code_completion_options_new;
 		code_completion_base = "";
@@ -3889,8 +3876,6 @@ void CodeEdit::_filter_code_completion_candidates_impl() {
 		code_completion_options = code_completion_options_new;
 		code_completion_ac_items.resize_initialized(code_completion_options.size());
 
-		code_completion_caret_column = caret_column;
-		code_completion_line = line;
 		code_completion_longest_line = MIN(max_width, theme_cache.code_completion_max_width * theme_cache.font_size);
 		code_completion_force_item_center = -1;
 		code_completion_active = true;
@@ -3898,6 +3883,11 @@ void CodeEdit::_filter_code_completion_candidates_impl() {
 		queue_redraw();
 		return;
 	}
+
+	const int caret_line = get_caret_line();
+	const int caret_column = get_caret_column();
+	const String line = get_line(caret_line);
+	ERR_FAIL_INDEX_MSG(caret_column, line.length() + 1, "Caret column exceeds line length.");
 
 	if (caret_column > 0 && line[caret_column - 1] == '(' && !code_completion_forced) {
 		cancel_code_completion();
@@ -4113,8 +4103,6 @@ void CodeEdit::_filter_code_completion_candidates_impl() {
 	code_completion_options = code_completion_options_new;
 	code_completion_ac_items.resize_initialized(code_completion_options.size());
 
-	code_completion_caret_column = caret_column;
-	code_completion_line = line;
 	code_completion_longest_line = MIN(max_width, theme_cache.code_completion_max_width * theme_cache.font_size);
 	code_completion_force_item_center = -1;
 	code_completion_active = true;
@@ -4158,10 +4146,6 @@ void CodeEdit::_text_set() {
 }
 
 void CodeEdit::_text_changed() {
-	if (code_completion_active && get_line(get_caret_line()) != code_completion_line) {
-		cancel_code_completion();
-	}
-
 	if (lines_edited_from == -1) {
 		return;
 	}
@@ -4197,16 +4181,6 @@ void CodeEdit::_text_changed() {
 	lines_edited_from = -1;
 	lines_edited_to = -1;
 	lines_edited_changed = 0;
-}
-
-void CodeEdit::_line_col_changed() {
-	if (!code_completion_active) {
-		return;
-	}
-
-	if (get_caret_line() != code_completion_caret_line || get_caret_column() != code_completion_caret_column) {
-		cancel_code_completion();
-	}
 }
 
 CodeEdit::CodeEdit() {
@@ -4271,7 +4245,6 @@ CodeEdit::CodeEdit() {
 
 	connect("lines_edited_from", callable_mp(this, &CodeEdit::_lines_edited_from));
 	connect("text_set", callable_mp(this, &CodeEdit::_text_set));
-	connect("caret_changed", callable_mp(this, &CodeEdit::_line_col_changed));
 	connect(SceneStringName(text_changed), callable_mp(this, &CodeEdit::_text_changed));
 
 	connect("gutter_clicked", callable_mp(this, &CodeEdit::_gutter_clicked));

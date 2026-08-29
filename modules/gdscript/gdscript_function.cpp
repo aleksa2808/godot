@@ -351,23 +351,9 @@ GDScriptFunctionState::GDScriptFunctionState() :
 		instances_list(this) {
 }
 
-void GDScriptFunctionState::clear() {
-	if (cleared) {
-		return;
-	}
-	ERR_FAIL_NULL_MSG(GDScriptLanguage::singleton, "GDScript bug (please report): Function state was not cleared before language shutdown.");
+GDScriptFunctionState::~GDScriptFunctionState() {
 	MutexLock lock(GDScriptLanguage::singleton->mutex);
-	if (cleared) {
-		return;
-	}
-	cleared = true;
-
-	_clear_connections();
 	scripts_list.remove_from_list();
 	instances_list.remove_from_list();
 	_clear_stack();
-}
-
-GDScriptFunctionState::~GDScriptFunctionState() {
-	clear();
 }

@@ -31,6 +31,7 @@
 #pragma once
 
 #include "core/object/object.h"
+#include "core/templates/simple_type.h"
 #include "core/typedefs.h"
 #include "core/variant/variant.h"
 
@@ -64,7 +65,7 @@ template <typename T, typename = void>
 struct GetTypeInfo;
 
 template <typename T>
-struct GetTypeInfo<T, std::enable_if_t<!std::is_same_v<T, std::decay_t<T>>>> : GetTypeInfo<std::decay_t<T>> {};
+struct GetTypeInfo<T, std::enable_if_t<!std::is_same_v<T, GetSimpleTypeT<T>>>> : GetTypeInfo<GetSimpleTypeT<T>> {};
 
 #define MAKE_TYPE_INFO(m_type, m_var_type) \
 	template <> \
@@ -255,7 +256,7 @@ inline String enum_qualified_name_to_class_info_name(const String &p_qualified_n
 	};
 
 template <typename T>
-inline StringName __constant_get_enum_name(T p_param) {
+inline StringName __constant_get_enum_name(T param) {
 	return GetTypeInfo<T>::get_class_info().class_name;
 }
 
@@ -284,7 +285,7 @@ inline StringName __constant_get_enum_value_name(const char *p_name) {
 	};
 
 template <typename T>
-inline StringName __constant_get_bitfield_name(T p_param) {
+inline StringName __constant_get_bitfield_name(T param) {
 	return GetTypeInfo<BitField<T>>::get_class_info().class_name;
 }
 #define CLASS_INFO(m_type) (GetTypeInfo<m_type *>::get_class_info())
@@ -299,9 +300,9 @@ inline StringName __constant_get_bitfield_name(T p_param) {
 // No initialization by default, except for scalar types.
 template <typename T>
 struct ZeroInitializer {
-	static void initialize(T &r_value) {
+	static void initialize(T &value) {
 		if constexpr (std::is_scalar_v<T>) {
-			r_value = {};
+			value = {};
 		}
 	}
 };
@@ -319,12 +320,11 @@ Variant::Type get_variant_type() {
 }
 
 template <typename T>
-const StringName &get_object_class_name_or_empty() {
+const String get_object_class_name_or_empty() {
 	if constexpr (std::is_base_of_v<Object, T>) {
 		return T::get_class_static();
 	} else {
-		static const StringName EMPTY = "";
-		return EMPTY;
+		return "";
 	}
 }
 

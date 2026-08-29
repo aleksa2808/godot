@@ -280,12 +280,22 @@ String ScriptCreateDialog::_validate_path(const String &p_path, bool p_file_must
 	}
 
 	// Check file extension.
+	String extension = p.get_extension();
+	List<String> extensions;
+
+	// Get all possible extensions for script.
+	for (int l = 0; l < language_menu->get_item_count(); l++) {
+		ScriptServer::get_language(l)->get_recognized_extensions(&extensions);
+	}
+
 	bool found = false;
 	bool match = false;
-	for (int l = 0; l < language_menu->get_item_count(); l++) {
-		if (p.has_extension(ScriptServer::get_language(l)->get_extension())) {
+	for (const String &E : extensions) {
+		if (E.nocasecmp_to(extension) == 0) {
 			found = true;
-			match = l == language_menu->get_selected();
+			if (E == ScriptServer::get_language(language_menu->get_selected())->get_extension()) {
+				match = true;
+			}
 			break;
 		}
 	}
@@ -456,9 +466,15 @@ void ScriptCreateDialog::_browse_path(bool browse_parent, bool p_save) {
 	}
 
 	file_browse->set_customization_flag_enabled(FileDialog::CUSTOMIZATION_OVERWRITE_WARNING, false);
-
 	file_browse->clear_filters();
-	file_browse->add_filter("*." + ScriptServer::get_language(language_menu->get_selected())->get_extension());
+	List<String> extensions;
+
+	int lang = language_menu->get_selected();
+	ScriptServer::get_language(lang)->get_recognized_extensions(&extensions);
+
+	for (const String &E : extensions) {
+		file_browse->add_filter("*." + E);
+	}
 
 	file_browse->set_current_path(file_path->get_text());
 	file_browse->popup_file_dialog();

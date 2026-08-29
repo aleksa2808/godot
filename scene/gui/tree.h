@@ -284,8 +284,6 @@ public:
 	void set_text(int p_column, String p_text);
 	String get_text(int p_column) const;
 
-	Ref<TextParagraph> _get_text_buf(int p_column) const;
-
 	void set_description(int p_column, String p_text);
 	String get_description(int p_column) const;
 
@@ -612,7 +610,6 @@ private:
 	void value_editor_changed(double p_value);
 	void _update_popup_menu(const TreeItem::Cell &p_cell);
 	void _update_value_editor(const TreeItem::Cell &p_cell);
-	String _get_range_cell_text(const TreeItem::Cell &p_cell) const;
 
 	void popup_select(int p_option);
 

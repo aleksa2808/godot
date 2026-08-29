@@ -833,6 +833,10 @@ GodotBody3D::GodotBody3D() :
 }
 
 GodotBody3D::~GodotBody3D() {
-	memdelete(fi_callback_data);
-	memdelete(direct_state);
+	if (fi_callback_data) {
+		memdelete(fi_callback_data);
+	}
+	if (direct_state) {
+		memdelete(direct_state);
+	}
 }

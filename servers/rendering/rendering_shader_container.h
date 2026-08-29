@@ -61,7 +61,6 @@ protected:
 		uint32_t specialization_constants_count = 0;
 		RDC::PipelineType pipeline_type = RDC::PIPELINE_TYPE_RASTERIZATION;
 		uint32_t has_multiview = 0;
-		uint32_t has_physical_storage_buffer_addresses = 0;
 		uint32_t has_dynamic_buffers = 0;
 		uint32_t compute_local_size[3] = {};
 		uint32_t set_count = 0;
@@ -229,7 +228,6 @@ protected:
 		uint32_t compute_local_size[3] = {};
 		uint32_t push_constant_size = 0;
 		bool has_multiview = false;
-		bool has_physical_storage_buffer_addresses = false;
 		bool has_dynamic_buffers = false;
 		RDC::PipelineType pipeline_type = RDC::PIPELINE_TYPE_RASTERIZATION;
 

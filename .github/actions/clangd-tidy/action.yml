@@ -26,14 +26,5 @@ runs:
         echo "::endgroup::"
 
         echo "::group::Running clangd-tidy"
-        CHANGED_FILES='${{ inputs.changed-files }}'
-        CHANGED_FILES_LENGTH=${#CHANGED_FILES}
-        if [ "$CHANGED_FILES_LENGTH" -lt 5 ]; then
-          echo "No changed files to check."
-        elif [ "$CHANGED_FILES_LENGTH" -gt 100000 ]; then
-          # Avoid argument length limitations by using xargs to pass the file list.
-          printf '%s\n' $CHANGED_FILES | tr -d '"' | xargs clangd-tidy
-        else
-          clangd-tidy $CHANGED_FILES
-        fi
+        clangd-tidy ${{ inputs.changed-files }}
         echo "::endgroup::"

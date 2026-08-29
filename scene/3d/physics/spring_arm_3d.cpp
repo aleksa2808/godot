@@ -35,7 +35,6 @@
 #include "scene/3d/camera_3d.h"
 #include "scene/main/scene_tree.h"
 #include "scene/resources/3d/shape_3d.h"
-#include "servers/physics_3d/direct_states/physics_direct_space_state_3d.h"
 
 void SpringArm3D::_notification(int p_what) {
 	switch (p_what) {

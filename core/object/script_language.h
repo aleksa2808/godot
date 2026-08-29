@@ -230,6 +230,25 @@ public:
 	virtual EditorLanguage *get_editor_language() = 0;
 #endif // TOOLS_ENABLED
 
+	struct Warning {
+		/// One-based.
+		int start_line = 0;
+		/// One-based.
+		int end_line = 0;
+		int code;
+		String string_code;
+		String message;
+	};
+
+	struct ScriptError {
+		String path;
+		/// One-based.
+		int line = -1;
+		/// One-based.
+		int column = -1;
+		String message;
+	};
+
 	enum TemplateLocation {
 		TEMPLATE_BUILT_IN,
 		TEMPLATE_EDITOR,
@@ -257,6 +276,7 @@ public:
 		}
 	};
 
+	void get_core_type_words(List<String> *p_core_type_words) const;
 	virtual Vector<String> get_reserved_words() const = 0;
 	virtual bool is_control_flow_keyword(const String &p_string) const = 0;
 	virtual Vector<String> get_comment_delimiters() const = 0;
@@ -265,10 +285,12 @@ public:
 	virtual Ref<Script> make_template(const String &p_template, const String &p_class_name, const String &p_base_class_name) const { return Ref<Script>(); }
 	virtual Vector<ScriptTemplate> get_built_in_templates(const StringName &p_object) { return Vector<ScriptTemplate>(); }
 	virtual bool is_using_templates() { return false; }
+	virtual bool validate(const String &p_script, const String &p_path = "", List<String> *r_functions = nullptr, List<ScriptError> *r_errors = nullptr, List<Warning> *r_warnings = nullptr, HashSet<int> *r_safe_lines = nullptr) const = 0;
 	virtual String validate_path(const String &p_path) const { return ""; }
 	virtual bool supports_builtin_mode() const = 0;
 	virtual bool supports_documentation() const { return false; }
 	virtual bool can_inherit_from_file() const { return false; }
+	virtual int find_function(const String &p_function, const String &p_code) const = 0;
 	virtual String make_function(const String &p_class, const String &p_name, const PackedStringArray &p_args) const = 0;
 	virtual bool can_make_function() const { return true; }
 	virtual Error open_in_external_editor(const Ref<Script> &p_script, int p_line, int p_col) { return ERR_UNAVAILABLE; }
@@ -347,6 +369,7 @@ public:
 		TypedArray<int> charac;
 	};
 
+	virtual void auto_indent_code(String &p_code, int p_from_line, int p_to_line) const = 0;
 	virtual void add_global_constant(const StringName &p_variable, const Variant &p_value) = 0;
 	virtual void add_named_global_constant(const StringName &p_name, const Variant &p_value) {}
 	virtual void remove_named_global_constant(const StringName &p_name) {}
@@ -378,10 +401,11 @@ public:
 	virtual Vector<StackInfo> debug_get_current_stack_info() { return Vector<StackInfo>(); }
 
 	virtual void reload_all_scripts() = 0;
-	virtual void reload_scripts(const Array &p_scripts) = 0;
-	virtual void reload_tool_script(const Ref<Script> &p_script) = 0;
+	virtual void reload_scripts(const Array &p_scripts, bool p_soft_reload) = 0;
+	virtual void reload_tool_script(const Ref<Script> &p_script, bool p_soft_reload) = 0;
 	/* LOADER FUNCTIONS */
 
+	virtual void get_recognized_extensions(List<String> *p_extensions) const = 0;
 	virtual void get_public_functions(List<MethodInfo> *p_functions) const = 0;
 	virtual void get_public_constants(List<Pair<String, Variant>> *p_constants) const = 0;
 	virtual void get_public_annotations(List<MethodInfo> *p_annotations) const = 0;

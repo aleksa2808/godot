@@ -270,11 +270,11 @@ Vector<FuzzySearchToken> FuzzySearch::_get_tokens(const String &p_query) const {
 	}
 
 	struct TokenComparator {
-		bool operator()(const FuzzySearchToken &p_left, const FuzzySearchToken &p_right) const {
-			if (p_left.string.length() == p_right.string.length()) {
-				return p_left.idx < p_right.idx;
+		bool operator()(const FuzzySearchToken &A, const FuzzySearchToken &B) const {
+			if (A.string.length() == B.string.length()) {
+				return A.idx < B.idx;
 			}
-			return p_left.string.length() > p_right.string.length();
+			return A.string.length() > B.string.length();
 		}
 	};
 

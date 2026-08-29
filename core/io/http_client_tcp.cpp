@@ -156,7 +156,10 @@ Error HTTPClientTCP::request(Method p_method, const String &p_url, const Vector<
 	ERR_FAIL_COND_V(status != STATUS_CONNECTED, ERR_INVALID_PARAMETER);
 	ERR_FAIL_COND_V(connection.is_null(), ERR_INVALID_DATA);
 
-	RETURN_IF_ERROR(verify_headers(p_headers));
+	Error err = verify_headers(p_headers);
+	if (err) {
+		return err;
+	}
 
 	String uri = p_url;
 	if (tls_options.is_null() && http_proxy_port != -1) {

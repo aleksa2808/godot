@@ -81,7 +81,7 @@ GodotApplication *GodotApp = nil;
 			keycode = Key::VOLUMEUP;
 		} break;
 		case NX_KEYTYPE_SOUND_DOWN: {
-			keycode = Key::VOLUMEDOWN;
+			keycode = Key::VOLUMEUP;
 		} break;
 		//NX_KEYTYPE_BRIGHTNESS_UP
 		//NX_KEYTYPE_BRIGHTNESS_DOWN

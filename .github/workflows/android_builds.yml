@@ -12,6 +12,7 @@ env:
   SCONS_FLAGS: >-
     dev_mode=yes
     module_text_server_fb_enabled=yes
+    swappy=yes
 
 jobs:
   build-android:
@@ -44,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -64,31 +65,12 @@ jobs:
         uses: ./.github/actions/godot-deps
 
       - name: Download Swappy
-        shell: sh
-        id: swappy_sdk
-        run: |
-          if python ./misc/scripts/install_swappy_android.py; then
-            echo "SWAPPY_ENABLED=yes" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::Swappy installation failed, building without Swappy support."
-            echo "SWAPPY_ENABLED=no" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Download Perfetto
-        shell: sh
-        id: perfetto_sdk
-        run: |
-          if python ./misc/scripts/install_perfetto.py; then
-            echo "PROFILER_ENABLED=perfetto" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::Perfetto installation failed, building without Perfetto support."
-            echo "PROFILER_ENABLED=none" >> "$GITHUB_OUTPUT"
-          fi
+        run: python ./misc/scripts/install_swappy_android.py
 
       - name: Compilation
         uses: ./.github/actions/godot-build
         with:
-          scons-flags: ${{ env.SCONS_FLAGS }} ${{ matrix.scons-flags }} profiler=${{ steps.perfetto_sdk.outputs.PROFILER_ENABLED }} swappy=${{ steps.swappy_sdk.outputs.SWAPPY_ENABLED }}
+          scons-flags: ${{ env.SCONS_FLAGS }} ${{ matrix.scons-flags }}
           platform: android
           target: ${{ matrix.target }}
 

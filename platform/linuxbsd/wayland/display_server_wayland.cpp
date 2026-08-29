@@ -509,6 +509,12 @@ void DisplayServerWayland::_mouse_update_mode() {
 
 	wayland_thread.pointer_set_constraint(constraint);
 
+	if (wanted_mouse_mode == DisplayServerEnums::MOUSE_MODE_CAPTURED) {
+		WindowData *pointed_win = windows.getptr(wayland_thread.pointer_get_pointed_window_id());
+		ERR_FAIL_NULL(pointed_win);
+		wayland_thread.pointer_set_hint(pointed_win->rect.size / 2);
+	}
+
 	mouse_mode = wanted_mouse_mode;
 }
 
@@ -1530,9 +1536,10 @@ void DisplayServerWayland::window_start_resize(DisplayServerEnums::WindowResizeE
 }
 
 void DisplayServerWayland::_window_update_hdr_state(WindowData &p_window) {
+	DisplayServerEnums::WindowID window_id = p_window.id;
+
 #if defined(RD_ENABLED)
 	if (rendering_context) {
-		DisplayServerEnums::WindowID window_id = p_window.id;
 		// The `display/window/hdr/request_hdr_output` project setting makes the main window "request" HDR.
 		// On Windows, this means enable HDR for the main window if it is on an HDR screen.
 		// Since all screens support HDR on Wayland, we use whether the window "prefers" HDR or not instead.
@@ -1936,8 +1943,7 @@ void DisplayServerWayland::try_suspend() {
 void DisplayServerWayland::process_events() {
 	wayland_thread.mutex.lock();
 
-	// Some behavior depends on the progress of the main thread.
-	wayland_thread.main_loop_callback();
+	wayland_thread.keyboard_echo_keys();
 
 	while (wayland_thread.has_message()) {
 		Ref<WaylandThread::Message> msg = wayland_thread.pop_message();
@@ -2598,18 +2604,31 @@ DisplayServerWayland::~DisplayServerWayland() {
 
 	// Destroy all drivers.
 #ifdef RD_ENABLED
-	memdelete(rendering_device);
-	memdelete(rendering_context);
+	if (rendering_device) {
+		memdelete(rendering_device);
+	}
+
+	if (rendering_context) {
+		memdelete(rendering_context);
+	}
 #endif
 
 #ifdef SPEECHD_ENABLED
-	memdelete(tts);
+	if (tts) {
+		memdelete(tts);
+	}
 #endif
 
 #ifdef DBUS_ENABLED
-	memdelete(portal_desktop);
-	memdelete(screensaver);
-	memdelete(atspi_monitor);
+	if (portal_desktop) {
+		memdelete(portal_desktop);
+	}
+	if (screensaver) {
+		memdelete(screensaver);
+	}
+	if (atspi_monitor) {
+		memdelete(atspi_monitor);
+	}
 #endif
 }
 

@@ -774,7 +774,7 @@ struct Diagnostic {
 	/**
 	 * The diagnostic's code, which might appear in the user interface.
 	 */
-	String code;
+	int code = 0;
 
 	/**
 	 * A human-readable string describing the source of this

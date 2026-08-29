@@ -30,7 +30,7 @@
 
 #include "image_compress_etcpak.h"
 
-#ifdef ETCPAK_COMPRESS_ENABLED
+#ifdef TOOLS_ENABLED
 
 #include "core/os/os.h"
 #include "core/string/print_string.h"
@@ -163,6 +163,8 @@ void _compress_etcpak(EtcpakType p_compress_type, Image *r_img) {
 
 	// Compress image data and (if required) mipmaps.
 	const bool has_mipmaps = r_img->has_mipmaps();
+	int width = r_img->get_width();
+	int height = r_img->get_height();
 
 	/*
 	The first mipmap level of a compressed texture must be a multiple of 4. Quote from D3D11.3 spec:
@@ -182,12 +184,9 @@ void _compress_etcpak(EtcpakType p_compress_type, Image *r_img) {
 	the surface pitch, which can encompass additional padding beyond the physical surface size.
 	*/
 
-	int width = (r_img->get_width() + 3) & ~0x03;
-	int height = (r_img->get_height() + 3) & ~0x03;
-
-	if (r_img->get_width() != width || r_img->get_height() != height) {
-		// Align the image to 4x4 texels.
-		r_img->resize(width, height, Image::INTERPOLATE_NEAREST);
+	if (width % 4 != 0 || height % 4 != 0) {
+		width = width <= 2 ? width : (width + 3) & ~3;
+		height = height <= 2 ? height : (height + 3) & ~3;
 	}
 
 	// Multiple-of-4 should be guaranteed by above.
@@ -306,4 +305,4 @@ void _compress_etcpak(EtcpakType p_compress_type, Image *r_img) {
 
 	print_verbose(vformat("etcpak: Encoding took %d ms.", OS::get_singleton()->get_ticks_msec() - start_time));
 }
-#endif // ETCPAK_COMPRESS_ENABLED
+#endif // TOOLS_ENABLED

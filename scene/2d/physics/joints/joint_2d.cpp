@@ -189,10 +189,6 @@ void Joint2D::_notification(int p_what) {
 			}
 			_update_joint(true);
 		} break;
-
-		case NOTIFICATION_DEBUG_COLLISIONS_HINT_CHANGED: {
-			queue_redraw();
-		} break;
 	}
 }
 

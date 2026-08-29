@@ -696,9 +696,6 @@ Error FreeDesktopPortalDesktop::file_dialog_show(DisplayServerEnums::WindowID p_
 		if (tokens.size() >= 1) {
 			String flt = tokens[0].strip_edges();
 			String mime = (tokens.size() >= 3) ? tokens[2].strip_edges() : String();
-			if (flt == "*.*" && mime == "application/octet-stream") {
-				mime = String();
-			}
 			if (!flt.is_empty() || !mime.is_empty()) {
 				if (tokens.size() >= 2) {
 					if (flt == "*.*") {
@@ -735,7 +732,10 @@ Error FreeDesktopPortalDesktop::file_dialog_show(DisplayServerEnums::WindowID p_
 	fd.opt_in_cb = p_options_in_cb;
 
 	String token;
-	RETURN_IF_ERROR(make_request_token(token));
+	Error err = make_request_token(token);
+	if (err != OK) {
+		return err;
+	}
 
 	// Generate FileChooser message.
 	const char *method = nullptr;

@@ -563,20 +563,20 @@ struct CSharpScriptDepSort {
 void CSharpLanguage::reload_all_scripts() {
 #ifdef GD_MONO_HOT_RELOAD
 	if (is_assembly_reloading_needed()) {
-		reload_assemblies();
+		reload_assemblies(false);
 	}
 #endif
 }
 
-void CSharpLanguage::reload_scripts(const Array &p_scripts) {
+void CSharpLanguage::reload_scripts(const Array &p_scripts, bool p_soft_reload) {
 #ifdef GD_MONO_HOT_RELOAD
 	if (is_assembly_reloading_needed()) {
-		reload_assemblies();
+		reload_assemblies(p_soft_reload);
 	}
 #endif
 }
 
-void CSharpLanguage::reload_tool_script(const Ref<Script> &p_script) {
+void CSharpLanguage::reload_tool_script(const Ref<Script> &p_script, bool p_soft_reload) {
 	CRASH_COND(!Engine::get_singleton()->is_editor_hint());
 
 #ifdef TOOLS_ENABLED
@@ -585,7 +585,7 @@ void CSharpLanguage::reload_tool_script(const Ref<Script> &p_script) {
 
 #ifdef GD_MONO_HOT_RELOAD
 	if (is_assembly_reloading_needed()) {
-		reload_assemblies();
+		reload_assemblies(p_soft_reload);
 	}
 #endif
 }
@@ -622,7 +622,7 @@ bool CSharpLanguage::is_assembly_reloading_needed() {
 	return true;
 }
 
-void CSharpLanguage::reload_assemblies() {
+void CSharpLanguage::reload_assemblies(bool p_soft_reload) {
 	ERR_FAIL_NULL(gdmono);
 	if (!gdmono->is_runtime_initialized()) {
 		return;
@@ -865,7 +865,7 @@ void CSharpLanguage::reload_assemblies() {
 #endif
 
 		if (!scr->get_path().is_empty() && !scr->get_path().begins_with("csharp://")) {
-			scr->reload();
+			scr->reload(p_soft_reload);
 
 			if (!scr->valid) {
 				scr->pending_reload_instances.clear();
@@ -1029,6 +1029,10 @@ void CSharpLanguage::reload_assemblies() {
 #endif
 }
 #endif
+
+void CSharpLanguage::get_recognized_extensions(List<String> *p_extensions) const {
+	p_extensions->push_back("cs");
+}
 
 #ifdef TOOLS_ENABLED
 Error CSharpLanguage::open_in_external_editor(const Ref<Script> &p_script, int p_line, int p_col) {

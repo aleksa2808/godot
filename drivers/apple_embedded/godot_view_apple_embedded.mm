@@ -179,7 +179,7 @@ static const float earth_gravity = 9.80665;
 
 	self.isActive = NO;
 
-	print_verbose("Stop rendering");
+	print_verbose("Stop animation!");
 
 	if (self.useCADisplayLink) {
 		[self.displayLink invalidate];
@@ -199,7 +199,7 @@ static const float earth_gravity = 9.80665;
 
 	self.isActive = YES;
 
-	print_verbose("Start rendering");
+	print_verbose("Start animation!");
 
 	if (self.useCADisplayLink) {
 		self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(drawView)];
@@ -237,7 +237,7 @@ static const float earth_gravity = 9.80665;
 		return;
 	}
 
-	if ([self.renderer setUp]) {
+	if ([self.renderer setupView:self]) {
 		return;
 	}
 
