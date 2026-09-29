@@ -14,6 +14,7 @@ module_jsonrpc_enabled = "yes"
 
 accesskit = "no"
 angle = "no"
+winrt = "no"
 
 generate_bundle = "yes"
 
