@@ -18,4 +18,5 @@ angle = "no"
 generate_bundle = "yes"
 
 compiledb = "yes"
-tests = "yes"
+# tests = "yes"
+# dev_mode="yes"
